@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.anthropic.com)",
+      "Bash(mkdir -p /tmp/design-extract)",
+      "Read(//tmp/**)",
+      "Bash(gunzip -c /Users/rafaelleon/.claude/projects/-Users-rafaelleon-Desktop-Developer-neni/6ad840a2-57ac-4428-b40e-c9a232d87523/tool-results/webfetch-1777064969439-27c0bu.bin)",
+      "Bash(gunzip)",
+      "Bash(file design.*)",
+      "Read(//private/tmp/design-extract/**)",
+      "Bash(tar -tf design.tar)",
+      "Bash(tar -xf design.tar)",
+      "Bash(pnpm --version)",
+      "Bash(pnpm create *)"
+    ]
+  }
+}
