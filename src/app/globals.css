@@ -1,26 +1,107 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Neni design tokens (warm off-white, warm ink, WhatsApp-green accent) */
+  --td-accent: #1faa59;
+  --td-accent-ink: #0f3d26;
+  --td-bg: #faf8f4;
+  --td-ink: #141311;
+  --td-mute: #6b6760;
+  --td-line: #e8e3da;
+  --td-card: #ffffff;
+
+  /* Canvas behind device frames */
+  --td-canvas: #f3efe7;
+
+  /* shadcn base — kept neutral, we use Neni tokens directly in components */
+  --radius: 0.75rem;
+  --background: #faf8f4;
+  --foreground: #141311;
+  --muted: #e8e3da;
+  --muted-foreground: #6b6760;
+  --card: #ffffff;
+  --card-foreground: #141311;
+  --popover: #ffffff;
+  --popover-foreground: #141311;
+  --primary: #141311;
+  --primary-foreground: #faf8f4;
+  --secondary: #e8e3da;
+  --secondary-foreground: #141311;
+  --accent: var(--td-accent);
+  --accent-foreground: #ffffff;
+  --destructive: #c9562c;
+  --border: #e8e3da;
+  --input: #e8e3da;
+  --ring: #141311;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-td-bg: var(--td-bg);
+  --color-td-ink: var(--td-ink);
+  --color-td-mute: var(--td-mute);
+  --color-td-line: var(--td-line);
+  --color-td-accent: var(--td-accent);
+  --color-td-card: var(--td-card);
+  --color-td-canvas: var(--td-canvas);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes blink {
+  50% {
+    opacity: 0;
   }
 }
 
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: var(--td-canvas);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  color: var(--td-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.neni-blink {
+  animation: blink 1s infinite;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  scrollbar-width: none;
 }

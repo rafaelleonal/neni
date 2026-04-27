@@ -11,7 +11,21 @@
       "Bash(tar -tf design.tar)",
       "Bash(tar -xf design.tar)",
       "Bash(pnpm --version)",
-      "Bash(pnpm create *)"
+      "Bash(pnpm create *)",
+      "Bash(pnpm dlx *)",
+      "Bash(pnpm add *)",
+      "Bash(pnpm tsc *)",
+      "Bash(pnpm exec *)",
+      "Bash(echo \"exit code: $?\")",
+      "Bash(pnpm next *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(echo \"exit=$?\")",
+      "Bash(npm view *)",
+      "Bash(pnpm install *)",
+      "Bash(git stash *)",
+      "Bash(pnpm dev *)",
+      "Bash(node -e \"const m = require\\('/Users/rafaelleon/Desktop/Developer/neni/src/lib/mocks/index.ts'\\)\")",
+      "Bash(node --experimental-vm-modules -e ' *)"
     ]
   }
 }
