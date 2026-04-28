@@ -25,7 +25,10 @@
       "Bash(git stash *)",
       "Bash(pnpm dev *)",
       "Bash(node -e \"const m = require\\('/Users/rafaelleon/Desktop/Developer/neni/src/lib/mocks/index.ts'\\)\")",
-      "Bash(node --experimental-vm-modules -e ' *)"
+      "Bash(node --experimental-vm-modules -e ' *)",
+      "Bash(ps -p 844 -p 850 -p 89952 -o pid,command)",
+      "Bash(kill 89952)",
+      "Bash(lsof -i :3000 -t -sTCP:LISTEN)"
     ]
   }
 }

@@ -1,19 +1,25 @@
+import { Faq } from "./faq";
 import { FeatureCards } from "./feature-cards";
+import { FinalCta } from "./final-cta";
 import { LandingFooter } from "./footer";
 import { LandingHeader } from "./header";
 import { Hero } from "./hero";
+import { HowItWorks } from "./how-it-works";
 import { Pricing } from "./pricing";
+import { Testimonials } from "./testimonials";
 
 export function LandingDesktop() {
   return (
-    <div
-      className="bg-td-bg text-td-ink w-[1440px] min-h-[900px] tracking-[-0.3px]"
-    >
+    <main className="bg-td-bg text-td-ink w-full max-w-[1440px] mx-auto min-h-[900px] tracking-[-0.3px]">
       <LandingHeader />
       <Hero />
       <FeatureCards />
+      <HowItWorks />
+      <Testimonials />
+      <Faq />
       <Pricing />
+      <FinalCta />
       <LandingFooter />
-    </div>
+    </main>
   );
 }
