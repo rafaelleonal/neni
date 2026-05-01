@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 import { useSearchParams } from "next/navigation";
 import {
@@ -25,6 +25,14 @@ const FILTERS: { id: Filter; label: string }[] = [
 ];
 
 export default function PedidosPage() {
+  return (
+    <Suspense fallback={<PedidosSkeleton />}>
+      <PedidosContent />
+    </Suspense>
+  );
+}
+
+function PedidosContent() {
   const searchParams = useSearchParams();
   const forceEmpty = searchParams?.get("empty") === "1";
   const orders = forceEmpty ? [] : RECENT_ORDERS;
@@ -203,6 +211,17 @@ function EmptyResults({ filter, query }: { filter: Filter; query: string }) {
   return (
     <div className="border-td-line text-td-mute rounded-2xl border border-dashed bg-white px-6 py-10 text-center text-sm">
       {message}
+    </div>
+  );
+}
+
+function PedidosSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-5xl px-5 pt-6 pb-8 md:px-8 md:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
+      <header className="mb-6">
+        <div className="bg-td-line h-6 w-32 animate-pulse rounded" />
+        <div className="bg-td-line mt-2 h-4 w-40 animate-pulse rounded" />
+      </header>
     </div>
   );
 }

@@ -35,7 +35,8 @@
       "Bash(node -e ' *)",
       "Bash(ps -p 95988 -o pid,command)",
       "Bash(npx tsc *)",
-      "Bash(curl -s http://localhost:61053/acceso)"
+      "Bash(curl -s http://localhost:61053/acceso)",
+      "Bash(pnpm run *)"
     ]
   }
 }

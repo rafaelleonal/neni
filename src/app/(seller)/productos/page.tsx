@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 
 import { useSearchParams } from "next/navigation";
 import { haptic } from "@/lib/haptics";
@@ -21,6 +21,25 @@ const INITIAL_PRODUCTS: ProductRow[] = SELLER_PRODUCTS.map((p, i) => ({
 }));
 
 export default function ProductosPage() {
+  return (
+    <Suspense fallback={<ProductosSkeleton />}>
+      <ProductosContent />
+    </Suspense>
+  );
+}
+
+function ProductosSkeleton() {
+  return (
+    <div className="mx-auto w-full max-w-5xl px-5 pt-6 pb-8 md:px-8 md:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
+      <header className="mb-6">
+        <div className="bg-td-line h-6 w-32 animate-pulse rounded" />
+        <div className="bg-td-line mt-2 h-4 w-40 animate-pulse rounded" />
+      </header>
+    </div>
+  );
+}
+
+function ProductosContent() {
   const searchParams = useSearchParams();
   const forceEmpty = searchParams?.get("empty") === "1";
 
