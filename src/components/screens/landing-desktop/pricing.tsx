@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "@/components/neni-icons";
 
@@ -23,8 +25,8 @@ export function Pricing() {
             OXXO, SPEI y efectivo, 0% comisión.
           </div>
           <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <Button variant="accent" size="lg">
-              Crear mi tienda ahora
+            <Button asChild variant="accent" size="lg">
+              <Link href="/onboarding">Crear mi tienda ahora</Link>
             </Button>
             <Button
               variant="ghost"

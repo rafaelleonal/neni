@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { ArrowIcon, LinkIcon } from "@/components/neni-icons";
 
@@ -19,8 +21,10 @@ export function Hero() {
           WhatsApp. Sin mensualidad, sin código, sin pretextos.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button size="lg">
-            Crear mi tienda <ArrowIcon size={18} />
+          <Button asChild size="lg">
+            <Link href="/onboarding">
+              Crear mi tienda <ArrowIcon size={18} />
+            </Link>
           </Button>
           <div className="border-td-line flex items-center gap-2 self-start rounded-full border bg-white px-[18px] py-3 font-mono text-[14px]">
             <LinkIcon size={14} stroke="var(--td-mute)" />

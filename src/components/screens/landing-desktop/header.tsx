@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 import { NeniLogo } from "@/components/neni-logo";
 
@@ -15,10 +17,12 @@ export function LandingHeader() {
         <span className="text-td-mute hidden text-[14px] md:inline">
           Entrar
         </span>
-        <Button size="sm" className="md:hidden">
-          Crear
+        <Button asChild size="sm" className="md:hidden">
+          <Link href="/onboarding">Crear</Link>
         </Button>
-        <Button className="hidden md:inline-flex">Crear tienda gratis</Button>
+        <Button asChild className="hidden md:inline-flex">
+          <Link href="/onboarding">Crear tienda gratis</Link>
+        </Button>
       </div>
     </div>
   );

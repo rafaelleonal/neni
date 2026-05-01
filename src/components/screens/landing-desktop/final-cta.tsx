@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { ArrowIcon } from "@/components/neni-icons";
 
 export function FinalCta() {
@@ -19,9 +21,12 @@ export function FinalCta() {
             mensualidad.
           </div>
           <div className="mt-9 inline-flex flex-col gap-3 rounded-3xl bg-[rgba(255,255,255,0.12)] p-[6px] md:flex-row md:items-center md:rounded-full">
-            <div className="text-td-accent flex items-center justify-center gap-[10px] rounded-full bg-white px-[22px] py-[14px] text-[16px] font-semibold">
+            <Link
+              href="/onboarding"
+              className="text-td-accent flex items-center justify-center gap-[10px] rounded-full bg-white px-[22px] py-[14px] text-[16px] font-semibold transition-transform hover:brightness-95 active:scale-[0.98]"
+            >
               Crear mi tienda <ArrowIcon size={18} stroke="var(--td-accent)" />
-            </div>
+            </Link>
             <div className="px-4 pb-2 text-center text-[14px] opacity-90 md:pb-0">
               Sin tarjeta · Sin contratos
             </div>
