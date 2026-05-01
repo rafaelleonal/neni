@@ -1,3 +1,4 @@
+import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 export type Category =
@@ -39,7 +40,10 @@ export function StepCategory({ value, onChange }: StepCategoryProps) {
             <button
               key={cat.id}
               type="button"
-              onClick={() => onChange(cat.id)}
+              onClick={() => {
+                haptic("selection");
+                onChange(cat.id);
+              }}
               className={cn(
                 "flex min-h-[88px] flex-col items-start justify-between rounded-2xl px-4 py-4 text-left transition-colors",
                 selected

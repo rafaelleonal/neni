@@ -1,6 +1,9 @@
+import Link from "next/link";
 import { ORDER_STATE_STYLE, RECENT_ORDERS } from "@/lib/mocks";
 
 import { BellIcon } from "@/components/neni-icons";
+
+const RECENT_LIMIT = 4;
 
 export default function DashboardPage() {
   return (
@@ -155,15 +158,15 @@ function RecentOrders() {
         <h2 className="text-base font-semibold lg:text-lg">
           Pedidos recientes
         </h2>
-        <button
-          type="button"
+        <Link
+          href="/pedidos"
           className="text-td-mute hover:text-td-ink ml-auto text-sm"
         >
           Ver todos
-        </button>
+        </Link>
       </div>
       <div className="flex flex-col gap-2">
-        {RECENT_ORDERS.map((order) => {
+        {RECENT_ORDERS.slice(0, RECENT_LIMIT).map((order) => {
           const style = ORDER_STATE_STYLE[order.state];
           return (
             <button
@@ -189,7 +192,7 @@ function RecentOrders() {
                     color: style.color,
                   }}
                 >
-                  {order.state}
+                  {style.label}
                 </div>
               </div>
             </button>

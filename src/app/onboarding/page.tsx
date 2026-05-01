@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import { useRouter } from "next/navigation";
+import { haptic } from "@/lib/haptics";
 
 import { Button } from "@/components/ui/button";
 import { ArrowIcon } from "@/components/neni-icons";
@@ -53,8 +54,10 @@ export default function OnboardingPage() {
   function handleNext() {
     if (!isStepValid) return;
     if (step < TOTAL_STEPS) {
+      haptic("light");
       setStep((step + 1) as Step);
     } else {
+      haptic("medium");
       // TODO: hit API to create the store. For now, log and route to dashboard.
       console.log("Onboarding complete:", data);
       router.push("/dashboard");
@@ -62,6 +65,7 @@ export default function OnboardingPage() {
   }
 
   function handleBack() {
+    haptic("selection");
     if (step === 1) {
       router.back();
     } else {

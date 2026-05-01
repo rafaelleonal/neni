@@ -5,24 +5,24 @@ const FOOTER_COLS = [
     title: "Producto",
     links: ["Cómo funciona", "Precios", "Plantillas", "Integraciones", "API"],
   },
-  {
-    title: "Casos",
-    links: [
-      "Comida y bebidas",
-      "Skincare y belleza",
-      "Ropa y moda",
-      "Hecho a mano",
-      "Servicios",
-    ],
-  },
-  {
-    title: "Recursos",
-    links: ["Centro de ayuda", "Academia Neni", "Blog", "Comunidad", "Eventos"],
-  },
-  {
-    title: "Empresa",
-    links: ["Nosotros", "Carreras", "Prensa", "Legal", "Contacto"],
-  },
+  // {
+  //   title: "Casos",
+  //   links: [
+  //     "Comida y bebidas",
+  //     "Skincare y belleza",
+  //     "Ropa y moda",
+  //     "Hecho a mano",
+  //     "Servicios",
+  //   ],
+  // },
+  // {
+  //   title: "Recursos",
+  //   links: ["Centro de ayuda", "Academia Neni", "Blog", "Comunidad", "Eventos"],
+  // },
+  // {
+  //   title: "Empresa",
+  //   links: ["Nosotros", "Carreras", "Prensa", "Legal", "Contacto"],
+  // },
 ];
 
 const SOCIAL = ["IG", "TT", "YT", "WA"];
@@ -35,7 +35,7 @@ export function LandingFooter() {
       <div className="mb-12 grid grid-cols-2 gap-8 md:grid-cols-3 lg:mb-[56px] lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
         <div className="col-span-2 md:col-span-3 lg:col-span-1">
           <NeniLogo size={32} />
-          <div className="text-td-mute mt-4 max-w-[280px] text-[14px] leading-[1.5]">
+          <div className="text-td-mute mt-4 max-w-[280px] text-[14px] leading-normal">
             La plataforma de venta hecha para nenis mexicanas. De Tijuana a
             Mérida.
           </div>
@@ -67,7 +67,7 @@ export function LandingFooter() {
       </div>
 
       <div className="border-td-line text-td-mute flex flex-col justify-between gap-4 border-t pt-6 text-[12.5px] md:flex-row md:items-center md:gap-0">
-        <div>© {year} Neni · Hecho en CDMX con 🌶️</div>
+        <div>© {year} Neni · Hecho en Chiapas con 🩵</div>
         <div className="flex flex-wrap gap-3 md:gap-6">
           <span>Privacidad</span>
           <span>Términos</span>

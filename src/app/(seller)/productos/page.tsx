@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { haptic } from "@/lib/haptics";
 import { SELLER_PRODUCTS, type SellerProduct } from "@/lib/mocks";
 import { cn } from "@/lib/utils";
 
@@ -54,9 +55,15 @@ export default function ProductosPage() {
   }, [products, filter, query]);
 
   function toggleVisible(id: string) {
+    haptic("selection");
     setProducts((prev) =>
       prev.map((p) => (p.id === id ? { ...p, visible: !p.visible } : p))
     );
+  }
+
+  function handleFilter(next: Filter) {
+    haptic("selection");
+    setFilter(next);
   }
 
   return (
@@ -70,7 +77,7 @@ export default function ProductosPage() {
 
       <AddProductCard />
 
-      <Filters value={filter} onChange={setFilter} counts={counts} />
+      <Filters value={filter} onChange={handleFilter} counts={counts} />
 
       {filteredProducts.length === 0 ? (
         <EmptyResults query={query} filter={filter} />
@@ -90,6 +97,7 @@ export default function ProductosPage() {
       <button
         type="button"
         aria-label="Agregar producto"
+        onClick={() => haptic("light")}
         className="bg-td-ink text-td-bg fixed right-5 bottom-24 grid h-14 w-14 place-items-center rounded-full shadow-[0_12px_30px_-8px_rgba(0,0,0,0.3)] lg:hidden"
       >
         <PlusIcon size={22} stroke="var(--td-bg)" sw={2.2} />
