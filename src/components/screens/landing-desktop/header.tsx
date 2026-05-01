@@ -14,9 +14,12 @@ export function LandingHeader() {
         <span>Ayuda</span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-td-mute hidden text-[14px] md:inline">
+        <Link
+          href="/acceso"
+          className="text-td-mute hover:text-td-ink hidden text-[14px] transition-colors md:inline"
+        >
           Entrar
-        </span>
+        </Link>
         <Button asChild size="sm" className="md:hidden">
           <Link href="/onboarding">Crear</Link>
         </Button>

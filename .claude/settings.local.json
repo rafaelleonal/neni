@@ -33,7 +33,9 @@
       "Bash(pnpm format:check)",
       "Bash(node -e \"const u = require\\('/Users/rafaelleon/Desktop/Developer/neni/src/lib/utils.ts'\\)\")",
       "Bash(node -e ' *)",
-      "Bash(ps -p 95988 -o pid,command)"
+      "Bash(ps -p 95988 -o pid,command)",
+      "Bash(npx tsc *)",
+      "Bash(curl -s http://localhost:61053/acceso)"
     ]
   }
 }

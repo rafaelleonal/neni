@@ -3,26 +3,12 @@ import { NeniLogo } from "@/components/neni-logo";
 const FOOTER_COLS = [
   {
     title: "Producto",
-    links: ["Cómo funciona", "Precios", "Plantillas", "Integraciones", "API"],
+    links: ["Cómo funciona", "Precios", "Plantillas"],
   },
-  // {
-  //   title: "Casos",
-  //   links: [
-  //     "Comida y bebidas",
-  //     "Skincare y belleza",
-  //     "Ropa y moda",
-  //     "Hecho a mano",
-  //     "Servicios",
-  //   ],
-  // },
-  // {
-  //   title: "Recursos",
-  //   links: ["Centro de ayuda", "Academia Neni", "Blog", "Comunidad", "Eventos"],
-  // },
-  // {
-  //   title: "Empresa",
-  //   links: ["Nosotros", "Carreras", "Prensa", "Legal", "Contacto"],
-  // },
+  {
+    title: "Empresa",
+    links: ["Nosotros", "Legal", "Contacto"],
+  },
 ];
 
 const SOCIAL = ["IG", "TT", "YT", "WA"];
@@ -67,14 +53,14 @@ export function LandingFooter() {
       </div>
 
       <div className="border-td-line text-td-mute flex flex-col justify-between gap-4 border-t pt-6 text-[12.5px] md:flex-row md:items-center md:gap-0">
-        <div>© {year} Neni · Hecho en Chiapas con 🩵</div>
+        <div>© {year} Neni · Hecho en Chiapas</div>
         <div className="flex flex-wrap gap-3 md:gap-6">
           <span>Privacidad</span>
           <span>Términos</span>
           <span>Cookies</span>
           <span>Estado del servicio</span>
         </div>
-        <div className="font-mono text-[11px]">🇲🇽 Español (MX) ▾</div>
+        <div className="font-mono text-[11px]">🇲🇽 Español </div>
       </div>
     </div>
   );

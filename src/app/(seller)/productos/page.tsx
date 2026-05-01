@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 
+import { useSearchParams } from "next/navigation";
 import { haptic } from "@/lib/haptics";
 import { SELLER_PRODUCTS, type SellerProduct } from "@/lib/mocks";
 import { cn } from "@/lib/utils";
 
+import { EMPTY_PRODUCTS_DEFAULTS, EmptyState } from "@/components/empty-state";
 import { ArrowIcon, PlusIcon, SearchIcon } from "@/components/neni-icons";
 import { ProductPlaceholder } from "@/components/product-placeholder";
 
@@ -19,7 +21,12 @@ const INITIAL_PRODUCTS: ProductRow[] = SELLER_PRODUCTS.map((p, i) => ({
 }));
 
 export default function ProductosPage() {
-  const [products, setProducts] = useState<ProductRow[]>(INITIAL_PRODUCTS);
+  const searchParams = useSearchParams();
+  const forceEmpty = searchParams?.get("empty") === "1";
+
+  const [products, setProducts] = useState<ProductRow[]>(
+    forceEmpty ? [] : INITIAL_PRODUCTS
+  );
   const [filter, setFilter] = useState<Filter>("todos");
   const [query, setQuery] = useState("");
 
@@ -64,6 +71,17 @@ export default function ProductosPage() {
   function handleFilter(next: Filter) {
     haptic("selection");
     setFilter(next);
+  }
+
+  if (products.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-5 pt-6 pb-8 md:px-8 md:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
+        <header className="mb-2">
+          <h1 className="text-xl font-semibold lg:text-2xl">Productos</h1>
+        </header>
+        <EmptyState {...EMPTY_PRODUCTS_DEFAULTS} />
+      </div>
+    );
   }
 
   return (

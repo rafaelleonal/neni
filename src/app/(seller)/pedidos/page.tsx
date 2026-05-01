@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { useSearchParams } from "next/navigation";
 import {
   ORDER_STATE_STYLE,
   RECENT_ORDERS,
@@ -10,6 +11,7 @@ import {
 } from "@/lib/mocks";
 import { cn, formatPrice } from "@/lib/utils";
 
+import { EMPTY_ORDERS_DEFAULTS, EmptyState } from "@/components/empty-state";
 import { SearchIcon } from "@/components/neni-icons";
 
 type Filter = "todos" | OrderState;
@@ -23,37 +25,54 @@ const FILTERS: { id: Filter; label: string }[] = [
 ];
 
 export default function PedidosPage() {
+  const searchParams = useSearchParams();
+  const forceEmpty = searchParams?.get("empty") === "1";
+  const orders = forceEmpty ? [] : RECENT_ORDERS;
+
   const [filter, setFilter] = useState<Filter>("todos");
   const [query, setQuery] = useState("");
 
   const counts = useMemo(() => {
     const c: Record<Filter, number> = {
-      todos: RECENT_ORDERS.length,
+      todos: orders.length,
       nuevo: 0,
       preparando: 0,
       camino: 0,
       entregado: 0,
     };
-    for (const o of RECENT_ORDERS) c[o.state]++;
+    for (const o of orders) c[o.state]++;
     return c;
-  }, []);
+  }, [orders]);
 
   const filtered = useMemo(() => {
-    return RECENT_ORDERS.filter((o) =>
-      filter === "todos" ? true : o.state === filter
-    ).filter((o) => {
-      if (query.trim().length === 0) return true;
-      const q = query.trim().toLowerCase();
-      return o.who.toLowerCase().includes(q) || o.id.toLowerCase().includes(q);
-    });
-  }, [filter, query]);
+    return orders
+      .filter((o) => (filter === "todos" ? true : o.state === filter))
+      .filter((o) => {
+        if (query.trim().length === 0) return true;
+        const q = query.trim().toLowerCase();
+        return (
+          o.who.toLowerCase().includes(q) || o.id.toLowerCase().includes(q)
+        );
+      });
+  }, [orders, filter, query]);
+
+  if (orders.length === 0) {
+    return (
+      <div className="mx-auto w-full max-w-3xl px-5 pt-6 pb-8 md:px-8 md:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
+        <header className="mb-2">
+          <h1 className="text-xl font-semibold lg:text-2xl">Pedidos</h1>
+        </header>
+        <EmptyState {...EMPTY_ORDERS_DEFAULTS} />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl px-5 pt-6 pb-8 md:px-8 md:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
       <Header total={counts.todos} query={query} onQueryChange={setQuery} />
       <Filters value={filter} onChange={setFilter} counts={counts} />
       {filtered.length === 0 ? (
-        <EmptyState filter={filter} query={query} />
+        <EmptyResults filter={filter} query={query} />
       ) : (
         <div className="flex flex-col gap-2">
           {filtered.map((order) => (
@@ -171,7 +190,7 @@ function OrderRow({ order }: { order: Order }) {
   );
 }
 
-function EmptyState({ filter, query }: { filter: Filter; query: string }) {
+function EmptyResults({ filter, query }: { filter: Filter; query: string }) {
   const message =
     query.trim().length > 0
       ? `Ningún pedido coincide con "${query.trim()}"`
