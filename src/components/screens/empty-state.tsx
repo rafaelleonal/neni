@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { PhoneScreen } from "@/components/phone-screen";
-import { ArrowIcon } from "@/components/neni-icons";
+
 import { Button } from "@/components/ui/button";
+import { ArrowIcon } from "@/components/neni-icons";
+import { PhoneScreen } from "@/components/phone-screen";
 
 type Props = {
   title: string;
@@ -14,14 +15,14 @@ type Props = {
 export function EmptyState({ title, sub, cta, illus, headerLabel }: Props) {
   return (
     <PhoneScreen homeIndicatorPlacement="floating">
-      <div className="flex items-center gap-3 pt-[4px] px-[20px] pb-[8px]">
+      <div className="flex items-center gap-3 px-[20px] pt-[4px] pb-[8px]">
         <div className="text-td-mute text-[22px]">‹</div>
         {headerLabel && (
           <div className="text-[17px] font-semibold">{headerLabel}</div>
         )}
       </div>
 
-      <div className="flex flex-col items-center text-center py-[100px] px-[32px] gap-[16px]">
+      <div className="flex flex-col items-center gap-[16px] px-[32px] py-[100px] text-center">
         <svg width="160" height="160" viewBox="0 0 160 160" fill="none">
           <circle
             cx="80"
@@ -33,10 +34,10 @@ export function EmptyState({ title, sub, cta, illus, headerLabel }: Props) {
           />
           {illus}
         </svg>
-        <h2 className="text-[22px] font-semibold m-0 tracking-[-0.6px]">
+        <h2 className="m-0 text-[22px] font-semibold tracking-[-0.6px]">
           {title}
         </h2>
-        <p className="text-td-mute text-[14px] m-0 leading-[1.5] max-w-[260px]">
+        <p className="text-td-mute m-0 max-w-[260px] text-[14px] leading-[1.5]">
           {sub}
         </p>
         <div className="mt-[8px]">

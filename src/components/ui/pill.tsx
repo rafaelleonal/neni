@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+
 import { cn } from "@/lib/utils";
 
 export type PillVariant = "neutral" | "accent" | "dark" | "outline" | "muted";
@@ -22,7 +23,12 @@ const VARIANT_CLASSES: Record<PillVariant, string> = {
 };
 
 const SIZE_STYLES: Record<PillSize, CSSProperties> = {
-  xs: { padding: "2px 7px", fontSize: 9.5, fontWeight: 700, letterSpacing: 0.4 },
+  xs: {
+    padding: "2px 7px",
+    fontSize: 9.5,
+    fontWeight: 700,
+    letterSpacing: 0.4,
+  },
   sm: { padding: "4px 10px", fontSize: 11, fontWeight: 600 },
   md: { padding: "6px 12px", fontSize: 12.5, fontWeight: 500 },
 };
@@ -41,7 +47,7 @@ export function Pill({
         "inline-block rounded-full whitespace-nowrap",
         VARIANT_CLASSES[variant],
         uppercase && "uppercase",
-        className,
+        className
       )}
       style={{
         ...SIZE_STYLES[size],

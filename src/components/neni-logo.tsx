@@ -40,12 +40,7 @@ export function NeniLogo({
             border: `2px solid ${color}`,
           }}
         >
-          <svg
-            width={S * 0.5}
-            height={S * 0.5}
-            viewBox="0 0 24 24"
-            fill="none"
-          >
+          <svg width={S * 0.5} height={S * 0.5} viewBox="0 0 24 24" fill="none">
             <text
               x="50%"
               y="50%"

@@ -10,7 +10,7 @@ import { Testimonials } from "./testimonials";
 
 export function LandingDesktop() {
   return (
-    <main className="bg-td-bg text-td-ink w-full max-w-[1440px] mx-auto min-h-[900px] tracking-[-0.3px]">
+    <main className="bg-td-bg text-td-ink mx-auto min-h-[900px] w-full max-w-[1440px] tracking-[-0.3px]">
       <LandingHeader />
       <Hero />
       <FeatureCards />

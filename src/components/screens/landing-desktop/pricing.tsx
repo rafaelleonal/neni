@@ -1,26 +1,28 @@
 import { Button } from "@/components/ui/button";
 import { CheckIcon } from "@/components/neni-icons";
+
 import { PLAN_FEATURES } from "./constants";
 
 export function Pricing() {
   return (
-    <div className="px-6 md:px-12 lg:px-[72px] pb-12 md:pb-16 lg:pb-[80px]">
-      <div className="grid lg:items-center bg-td-ink text-td-bg rounded-3xl lg:rounded-[28px] py-12 md:py-16 lg:py-[64px] px-8 md:px-12 lg:px-[56px] relative overflow-hidden grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-10 lg:gap-[48px]">
+    <div className="px-6 pb-12 md:px-12 md:pb-16 lg:px-[72px] lg:pb-[80px]">
+      <div className="bg-td-ink text-td-bg relative grid grid-cols-1 gap-10 overflow-hidden rounded-3xl px-8 py-12 md:px-12 md:py-16 lg:grid-cols-[1.3fr_1fr] lg:items-center lg:gap-[48px] lg:rounded-[28px] lg:px-[56px] lg:py-[64px]">
         <div>
-          <div className="text-[12px] tracking-[1.5px] uppercase text-[rgba(255,255,255,0.5)] mb-3">
+          <div className="mb-3 text-[12px] tracking-[1.5px] text-[rgba(255,255,255,0.5)] uppercase">
             Precio
           </div>
-          <div className="text-6xl md:text-8xl lg:text-[92px] font-semibold tracking-[-2px] md:tracking-[-3px] lg:tracking-[-4px] leading-[1]">
+          <div className="text-6xl leading-[1] font-semibold tracking-[-2px] md:text-8xl md:tracking-[-3px] lg:text-[92px] lg:tracking-[-4px]">
             $0
-            <span className="text-2xl md:text-3xl lg:text-[32px] text-[rgba(255,255,255,0.5)] font-medium">
-              {" "}/ mes
+            <span className="text-2xl font-medium text-[rgba(255,255,255,0.5)] md:text-3xl lg:text-[32px]">
+              {" "}
+              / mes
             </span>
           </div>
-          <div className="text-[15px] text-[rgba(255,255,255,0.7)] mt-4 max-w-[440px] leading-[1.5]">
+          <div className="mt-4 max-w-[440px] text-[15px] leading-[1.5] text-[rgba(255,255,255,0.7)]">
             Gratis para siempre. Solo pagas 2.5% cuando cobras con tarjeta.
             OXXO, SPEI y efectivo, 0% comisión.
           </div>
-          <div className="flex flex-col sm:flex-row gap-3 mt-7">
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
             <Button variant="accent" size="lg">
               Crear mi tienda ahora
             </Button>
@@ -50,7 +52,7 @@ export function Pricing() {
             </div>
           ))}
         </div>
-        <div className="bg-td-accent absolute -right-[80px] -top-[80px] w-[280px] h-[280px] rounded-full opacity-[0.15]" />
+        <div className="bg-td-accent absolute -top-[80px] -right-[80px] h-[280px] w-[280px] rounded-full opacity-[0.15]" />
       </div>
     </div>
   );

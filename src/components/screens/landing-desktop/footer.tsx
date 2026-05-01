@@ -31,11 +31,11 @@ export function LandingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <div className="px-6 md:px-12 lg:px-[72px] pt-12 md:pt-16 lg:pt-[64px] pb-8 md:pb-[32px] border-t border-td-line bg-td-bg">
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr] gap-8 mb-12 lg:mb-[56px]">
+    <div className="border-td-line bg-td-bg border-t px-6 pt-12 pb-8 md:px-12 md:pt-16 md:pb-[32px] lg:px-[72px] lg:pt-[64px]">
+      <div className="mb-12 grid grid-cols-2 gap-8 md:grid-cols-3 lg:mb-[56px] lg:grid-cols-[1.4fr_1fr_1fr_1fr_1fr]">
         <div className="col-span-2 md:col-span-3 lg:col-span-1">
           <NeniLogo size={32} />
-          <div className="text-[14px] text-td-mute mt-4 leading-[1.5] max-w-[280px]">
+          <div className="text-td-mute mt-4 max-w-[280px] text-[14px] leading-[1.5]">
             La plataforma de venta hecha para nenis mexicanas. De Tijuana a
             Mérida.
           </div>
@@ -43,7 +43,7 @@ export function LandingFooter() {
             {SOCIAL.map((tag) => (
               <div
                 key={tag}
-                className="w-[36px] h-[36px] rounded-full bg-white border border-td-line grid place-items-center font-mono text-[11px] font-bold text-td-ink"
+                className="border-td-line text-td-ink grid h-[36px] w-[36px] place-items-center rounded-full border bg-white font-mono text-[11px] font-bold"
               >
                 {tag}
               </div>
@@ -52,12 +52,12 @@ export function LandingFooter() {
         </div>
         {FOOTER_COLS.map((col) => (
           <div key={col.title}>
-            <div className="text-[11px] tracking-[0.6px] uppercase text-td-ink font-bold font-mono mb-4">
+            <div className="text-td-ink mb-4 font-mono text-[11px] font-bold tracking-[0.6px] uppercase">
               {col.title}
             </div>
             <div className="flex flex-col gap-[10px]">
               {col.links.map((link) => (
-                <span key={link} className="text-[13.5px] text-td-mute">
+                <span key={link} className="text-td-mute text-[13.5px]">
                   {link}
                 </span>
               ))}
@@ -66,7 +66,7 @@ export function LandingFooter() {
         ))}
       </div>
 
-      <div className="pt-6 border-t border-td-line flex flex-col md:flex-row gap-4 md:gap-0 justify-between md:items-center text-td-mute text-[12.5px]">
+      <div className="border-td-line text-td-mute flex flex-col justify-between gap-4 border-t pt-6 text-[12.5px] md:flex-row md:items-center md:gap-0">
         <div>© {year} Neni · Hecho en CDMX con 🌶️</div>
         <div className="flex flex-wrap gap-3 md:gap-6">
           <span>Privacidad</span>

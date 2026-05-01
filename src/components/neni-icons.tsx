@@ -49,8 +49,12 @@ export const WaIcon = ({ size = 18, className, style }: IconProps) => (
   </svg>
 );
 
-export const ArrowIcon = (p: IconProps) => <StrokeIcon {...p} d="M5 12h14M13 6l6 6-6 6" />;
-export const CheckIcon = (p: IconProps) => <StrokeIcon {...p} d="M4 12l5 5L20 6" />;
+export const ArrowIcon = (p: IconProps) => (
+  <StrokeIcon {...p} d="M5 12h14M13 6l6 6-6 6" />
+);
+export const CheckIcon = (p: IconProps) => (
+  <StrokeIcon {...p} d="M4 12l5 5L20 6" />
+);
 export const StoreIcon = (p: IconProps) => (
   <StrokeIcon {...p} d="M3 9l1.5-5h15L21 9M3 9v11h18V9M3 9h18M9 13h6" />
 );
@@ -69,9 +73,14 @@ export const CardIcon = (p: IconProps) => (
 export const ChartIcon = (p: IconProps) => (
   <StrokeIcon {...p} d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
 );
-export const PlusIcon = (p: IconProps) => <StrokeIcon {...p} d="M12 5v14M5 12h14" />;
+export const PlusIcon = (p: IconProps) => (
+  <StrokeIcon {...p} d="M12 5v14M5 12h14" />
+);
 export const BellIcon = (p: IconProps) => (
-  <StrokeIcon {...p} d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9ZM10 21a2 2 0 0 0 4 0" />
+  <StrokeIcon
+    {...p}
+    d="M6 8a6 6 0 1 1 12 0c0 7 3 7 3 9H3c0-2 3-2 3-9ZM10 21a2 2 0 0 0 4 0"
+  />
 );
 export const SearchIcon = (p: IconProps) => (
   <StrokeIcon {...p} d="M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14ZM16 16l5 5" />

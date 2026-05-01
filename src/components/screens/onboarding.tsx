@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
-import { PhoneScreen } from "@/components/phone-screen";
-import { ArrowIcon, LinkIcon, PlusIcon } from "@/components/neni-icons";
+
 import { Button } from "@/components/ui/button";
+import { ArrowIcon, LinkIcon, PlusIcon } from "@/components/neni-icons";
+import { PhoneScreen } from "@/components/phone-screen";
 
 type StepProps = {
   n: number;
@@ -12,19 +13,22 @@ type StepProps = {
   children: ReactNode;
 };
 
-function Step({ n, total, title, sub, children, cta = "Continuar" }: StepProps) {
+function Step({
+  n,
+  total,
+  title,
+  sub,
+  children,
+  cta = "Continuar",
+}: StepProps) {
   return (
     <PhoneScreen
       height={844}
       style={{ display: "flex", flexDirection: "column" }}
     >
-      <div
-        className="flex items-center gap-3 py-[8px] px-[20px]"
-      >
+      <div className="flex items-center gap-3 px-[20px] py-[8px]">
         <div className="text-td-mute text-[22px]">‹</div>
-        <div
-          className="flex-1 overflow-hidden bg-td-line h-[4px] rounded-full"
-        >
+        <div className="bg-td-line h-[4px] flex-1 overflow-hidden rounded-full">
           <div
             className="bg-td-accent h-full"
             style={{
@@ -32,21 +36,15 @@ function Step({ n, total, title, sub, children, cta = "Continuar" }: StepProps) 
             }}
           />
         </div>
-        <div
-          className="text-td-mute text-[12px] font-mono"
-        >
+        <div className="text-td-mute font-mono text-[12px]">
           {n}/{total}
         </div>
       </div>
-      <div className="pt-[32px] px-[20px] pb-[20px] flex-1">
-        <h1
-          className="m-0 text-[30px] font-semibold leading-[1.1] tracking-[-1px]"
-        >
+      <div className="flex-1 px-[20px] pt-[32px] pb-[20px]">
+        <h1 className="m-0 text-[30px] leading-[1.1] font-semibold tracking-[-1px]">
           {title}
         </h1>
-        <p
-          className="text-td-mute mt-[10px] mx-0 mb-[26px] text-[15px] leading-[1.45]"
-        >
+        <p className="text-td-mute mx-0 mt-[10px] mb-[26px] text-[15px] leading-[1.45]">
           {sub}
         </p>
         {children}
@@ -71,44 +69,30 @@ const CATEGORIES = [
 
 export function Onboarding() {
   return (
-    <div
-      className="flex items-start gap-[24px]"
-    >
-      <div
-        className="rounded-[44px] overflow-hidden border-[10px] border-[#1A1A1A]"
-      >
+    <div className="flex items-start gap-[24px]">
+      <div className="overflow-hidden rounded-[44px] border-[10px] border-[#1A1A1A]">
         <Step
           n={1}
           total={3}
           title="¿Cómo se llama tu negocio?"
           sub="Será el nombre de tu tienda y de tu link público."
         >
-          <div
-            className="border-2 border-td-ink bg-white rounded-[14px] p-[14px] text-[18px] font-medium"
-          >
+          <div className="border-td-ink rounded-[14px] border-2 bg-white p-[14px] text-[18px] font-medium">
             Tacos Don Memo
-            <span
-              className="neni-blink bg-td-ink inline-block w-[2px] h-[20px] align-middle ml-[2px]"
-            />
+            <span className="neni-blink bg-td-ink ml-[2px] inline-block h-[20px] w-[2px] align-middle" />
           </div>
-          <div
-            className="flex items-center gap-1.5 border border-dashed border-td-line mt-[14px] py-[10px] px-[14px] bg-white rounded-[12px] font-mono text-[13px]"
-          >
+          <div className="border-td-line mt-[14px] flex items-center gap-1.5 rounded-[12px] border border-dashed bg-white px-[14px] py-[10px] font-mono text-[13px]">
             <LinkIcon size={13} stroke="var(--td-mute)" />
             <span className="text-td-mute">neni.mx/</span>
             <span className="font-medium">tacosdonmemo</span>
-            <span
-              className="text-td-accent ml-auto text-[11px] font-sans font-semibold"
-            >
+            <span className="text-td-accent ml-auto font-sans text-[11px] font-semibold">
               ✓ disponible
             </span>
           </div>
         </Step>
       </div>
 
-      <div
-        className="rounded-[44px] overflow-hidden border-[10px] border-[#1A1A1A]"
-      >
+      <div className="overflow-hidden rounded-[44px] border-[10px] border-[#1A1A1A]">
         <Step
           n={2}
           total={3}
@@ -119,11 +103,13 @@ export function Onboarding() {
             {CATEGORIES.map((cat) => (
               <div
                 key={cat.label}
-                className="flex flex-col justify-between rounded-[14px] py-[14px] px-[12px] min-h-[78px]"
+                className="flex min-h-[78px] flex-col justify-between rounded-[14px] px-[12px] py-[14px]"
                 style={{
                   background: cat.selected ? "var(--td-ink)" : "#fff",
                   color: cat.selected ? "var(--td-bg)" : "var(--td-ink)",
-                  border: cat.selected ? "2px solid var(--td-ink)" : "1px solid var(--td-line)",
+                  border: cat.selected
+                    ? "2px solid var(--td-ink)"
+                    : "1px solid var(--td-line)",
                 }}
               >
                 <div className="text-[15px] font-semibold">{cat.label}</div>
@@ -142,9 +128,7 @@ export function Onboarding() {
         </Step>
       </div>
 
-      <div
-        className="rounded-[44px] overflow-hidden border-[10px] border-[#1A1A1A]"
-      >
+      <div className="overflow-hidden rounded-[44px] border-[10px] border-[#1A1A1A]">
         <Step
           n={3}
           total={3}
@@ -152,37 +136,23 @@ export function Onboarding() {
           sub="Después puedes agregar más, variantes y categorías."
           cta="Crear mi tienda"
         >
-          <div
-            className="flex flex-col gap-2.5 border border-td-line bg-white rounded-[14px] p-[12px]"
-          >
-            <div
-              className="flex flex-col items-center justify-center gap-1.5 text-td-mute h-[130px] bg-[repeating-linear-gradient(135deg,_#EFE9DD_0_10px,_#EFE9DDCC_10px_20px)] rounded-[10px]"
-            >
-              <div
-                className="grid place-items-center w-[36px] h-[36px] rounded-full bg-white"
-              >
+          <div className="border-td-line flex flex-col gap-2.5 rounded-[14px] border bg-white p-[12px]">
+            <div className="text-td-mute flex h-[130px] flex-col items-center justify-center gap-1.5 rounded-[10px] bg-[repeating-linear-gradient(135deg,_#EFE9DD_0_10px,_#EFE9DDCC_10px_20px)]">
+              <div className="grid h-[36px] w-[36px] place-items-center rounded-full bg-white">
                 <PlusIcon size={18} />
               </div>
-              <div
-                className="text-[12px] font-mono"
-              >
-                tomar foto
-              </div>
+              <div className="font-mono text-[12px]">tomar foto</div>
             </div>
             <input
               defaultValue="Taco al pastor"
-              className="border-0 border-b border-b-td-line py-[10px] px-[2px] text-[16px] outline-none bg-transparent"
+              className="border-b-td-line border-0 border-b bg-transparent px-[2px] py-[10px] text-[16px] outline-none"
               style={{ fontFamily: "inherit" }}
             />
             <div className="flex gap-2.5">
-              <div
-                className="flex-1 bg-td-bg border border-td-line py-[10px] px-[12px] rounded-[10px] font-mono text-[15px] font-medium"
-              >
+              <div className="bg-td-bg border-td-line flex-1 rounded-[10px] border px-[12px] py-[10px] font-mono text-[15px] font-medium">
                 $25.00
               </div>
-              <div
-                className="bg-td-bg border border-td-line text-td-mute py-[10px] px-[12px] rounded-[10px] text-[13px]"
-              >
+              <div className="bg-td-bg border-td-line text-td-mute rounded-[10px] border px-[12px] py-[10px] text-[13px]">
                 + variantes
               </div>
             </div>

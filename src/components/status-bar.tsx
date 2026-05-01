@@ -8,7 +8,7 @@ export function StatusBar({ dark = false, time = "9:41" }: StatusBarProps) {
 
   return (
     <div
-      className="flex items-center justify-between h-[44px] px-[24px] text-[15px] font-semibold font-sans"
+      className="flex h-[44px] items-center justify-between px-[24px] font-sans text-[15px] font-semibold"
       style={{ color }}
     >
       <span>{time}</span>
@@ -30,11 +30,11 @@ export function StatusBar({ dark = false, time = "9:41" }: StatusBarProps) {
           />
         </svg>
         <div
-          className="w-[24px] h-[11px] border rounded-[3px] p-[1px]"
+          className="h-[11px] w-[24px] rounded-[3px] border p-[1px]"
           style={{ borderColor: color }}
         >
           <div
-            className="w-3/4 h-full rounded-[1px]"
+            className="h-full w-3/4 rounded-[1px]"
             style={{ background: color }}
           />
         </div>
@@ -59,10 +59,10 @@ export function HomeIndicator({
 
   return (
     <div
-      className={`grid place-items-center ${isCompact ? "h-[12px]" : "h-[34px]"} ${isFloating ? "absolute bottom-0 left-0 right-0" : ""}`}
+      className={`grid place-items-center ${isCompact ? "h-[12px]" : "h-[34px]"} ${isFloating ? "absolute right-0 bottom-0 left-0" : ""}`}
     >
       <div
-        className={`w-[134px] h-[5px] rounded-[3px] ${dark ? "bg-white" : "bg-[var(--td-ink)]"}`}
+        className={`h-[5px] w-[134px] rounded-[3px] ${dark ? "bg-white" : "bg-[var(--td-ink)]"}`}
       />
     </div>
   );

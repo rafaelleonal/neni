@@ -1,5 +1,6 @@
-import { WaIcon } from "@/components/neni-icons";
 import { cn } from "@/lib/utils";
+
+import { WaIcon } from "@/components/neni-icons";
 
 type FaqItem = {
   q: string;
@@ -37,16 +38,16 @@ const FAQ: FaqItem[] = [
 
 export function Faq() {
   return (
-    <div className="px-6 md:px-12 lg:px-[72px] pb-16 md:pb-20 lg:pb-[100px] grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-10 lg:gap-[64px]">
+    <div className="grid grid-cols-1 gap-10 px-6 pb-16 md:px-12 md:pb-20 lg:grid-cols-[1fr_1.6fr] lg:gap-[64px] lg:px-[72px] lg:pb-[100px]">
       <div>
-        <div className="text-[12px] tracking-[1.5px] uppercase text-td-mute mb-3 font-mono">
+        <div className="text-td-mute mb-3 font-mono text-[12px] tracking-[1.5px] uppercase">
           Preguntas frecuentes
         </div>
-        <h2 className="text-3xl md:text-4xl lg:text-[48px] font-semibold m-0 tracking-[-1px] lg:tracking-[-1.6px] leading-[1]">
+        <h2 className="m-0 text-3xl leading-[1] font-semibold tracking-[-1px] md:text-4xl lg:text-[48px] lg:tracking-[-1.6px]">
           Lo que se preguntan antes de empezar.
         </h2>
-        <div className="mt-7 p-5 rounded-[14px] bg-td-accent text-white">
-          <div className="text-[13px] opacity-85 mb-2">
+        <div className="bg-td-accent mt-7 rounded-[14px] p-5 text-white">
+          <div className="mb-2 text-[13px] opacity-85">
             ¿Necesitas ayuda en vivo?
           </div>
           <div className="flex items-center gap-[10px] text-[14px] font-semibold">
@@ -61,23 +62,23 @@ export function Faq() {
           <div
             key={item.q}
             className={cn(
-              "py-5 px-1 border-t border-td-line",
-              i === FAQ.length - 1 && "border-b border-td-line",
+              "border-td-line border-t px-1 py-5",
+              i === FAQ.length - 1 && "border-td-line border-b"
             )}
           >
             <div className="flex items-center gap-3 md:gap-4">
-              <div className="text-[12px] font-mono text-td-mute w-[24px]">
+              <div className="text-td-mute w-[24px] font-mono text-[12px]">
                 {String(i + 1).padStart(2, "0")}
               </div>
-              <div className="flex-1 text-base md:text-[18px] font-medium tracking-[-0.3px]">
+              <div className="flex-1 text-base font-medium tracking-[-0.3px] md:text-[18px]">
                 {item.q}
               </div>
-              <div className="text-[22px] text-td-mute font-light">
+              <div className="text-td-mute text-[22px] font-light">
                 {item.open ? "−" : "+"}
               </div>
             </div>
             {item.open && (
-              <div className="pl-9 md:pl-[40px] mt-3 text-[14px] text-td-mute leading-[1.6] max-w-[620px]">
+              <div className="text-td-mute mt-3 max-w-[620px] pl-9 text-[14px] leading-[1.6] md:pl-[40px]">
                 {item.a}
               </div>
             )}

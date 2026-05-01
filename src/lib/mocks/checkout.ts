@@ -19,7 +19,12 @@ export type PaymentMethod = {
 };
 
 export const PAYMENT_METHODS: PaymentMethod[] = [
-  { id: "TC", title: "Tarjeta", sub: "Visa, Mastercard, AMEX · Mercado Pago", color: "#1A1A1A" },
+  {
+    id: "TC",
+    title: "Tarjeta",
+    sub: "Visa, Mastercard, AMEX · Mercado Pago",
+    color: "#1A1A1A",
+  },
   {
     id: "OXX",
     title: "OXXO",
@@ -27,6 +32,16 @@ export const PAYMENT_METHODS: PaymentMethod[] = [
     badge: "Popular",
     color: "#D8232A",
   },
-  { id: "SPI", title: "SPEI", sub: "Transferencia bancaria · sin comisión", color: "#2E5BFF" },
-  { id: "$$", title: "Efectivo contra entrega", sub: "Paga al recibir", color: "#1FAA59" },
+  {
+    id: "SPI",
+    title: "SPEI",
+    sub: "Transferencia bancaria · sin comisión",
+    color: "#2E5BFF",
+  },
+  {
+    id: "$$",
+    title: "Efectivo contra entrega",
+    sub: "Paga al recibir",
+    color: "#1FAA59",
+  },
 ];

@@ -22,5 +22,10 @@ export const PAYMENT_SPLIT: PaymentSplitRow[] = [
   { method: "Tarjeta", percent: 48, color: "var(--td-ink)", amount: "$8,842" },
   { method: "OXXO", percent: 24, color: "#D8232A", amount: "$4,420" },
   { method: "SPEI", percent: 18, color: "#2E5BFF", amount: "$3,316" },
-  { method: "Efectivo", percent: 10, color: "var(--td-accent)", amount: "$1,842" },
+  {
+    method: "Efectivo",
+    percent: 10,
+    color: "var(--td-accent)",
+    amount: "$1,842",
+  },
 ];

@@ -20,7 +20,7 @@ export function ProductPlaceholder({
 
   return (
     <div
-      className={`w-full rounded-[10px] flex items-end p-[8px] font-mono text-[9px] tracking-[0.4px] ${className ?? ""}`}
+      className={`flex w-full items-end rounded-[10px] p-[8px] font-mono text-[9px] tracking-[0.4px] ${className ?? ""}`}
       style={{
         height: h,
         background: stripe,
