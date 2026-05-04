@@ -6,18 +6,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { haptic } from "@/lib/haptics";
+import { formatPhone } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
 import { ArrowIcon, WaIcon } from "@/components/neni-icons";
 import { NeniLogo } from "@/components/neni-logo";
-
-function formatPhone(digits: string): string {
-  // 10 dígitos MX → "55 1234 5678"
-  const a = digits.slice(0, 2);
-  const b = digits.slice(2, 6);
-  const c = digits.slice(6, 10);
-  return [a, b, c].filter(Boolean).join(" ");
-}
 
 export default function AccesoPage() {
   const router = useRouter();
@@ -91,7 +84,7 @@ export default function AccesoPage() {
               Tu WhatsApp
             </span>
             <div className="border-td-ink flex items-center gap-3 rounded-2xl border-2 bg-white px-4 py-4">
-              <span className="flex items-center gap-2 border-r border-[var(--td-line)] pr-3">
+              <span className="border-td-line flex items-center gap-2 border-r pr-3">
                 <span aria-hidden className="text-xl leading-none">
                   🇲🇽
                 </span>

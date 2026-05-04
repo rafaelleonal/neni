@@ -32,25 +32,63 @@ function isActive(state: OrderState): state is ActiveState {
 export function OrderDetailPage({
   order,
   storeName,
+  orderId,
 }: {
   order: OrderDetail;
   storeName: string;
+  orderId: string;
 }) {
   const router = useRouter();
   const [state, setState] = useState<OrderState>(order.state);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const subtotal = order.lines.reduce((sum, l) => sum + l.qty * l.price, 0);
   const stateStyle = ORDER_STATE_STYLE[state];
   const nextLabel = NEXT_LABEL[state];
   const stepIndex = isActive(state) ? ORDER_STATE_FLOW.indexOf(state) : -1;
+  const canCancel = state === "nuevo" || state === "preparando";
 
-  function handleAdvance() {
-    if (!nextLabel) return;
+  async function patchState(next: OrderState) {
+    setError(null);
+    const previous = state;
+    setState(next); // optimistic
+    setSubmitting(true);
+    const res = await fetch(`/api/orders/${orderId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ state: next }),
+    });
+    setSubmitting(false);
+    if (!res.ok) {
+      setState(previous); // revert
+      haptic("error");
+      setError("No pudimos actualizar el pedido. Intenta de nuevo.");
+      return false;
+    }
+    router.refresh();
+    return true;
+  }
 
+  async function handleAdvance() {
+    if (!nextLabel || submitting) return;
     const next = ORDER_STATE_FLOW[stepIndex + 1];
     if (!next) return;
     haptic(next === "entregado" ? "success" : "medium");
-    setState(next);
+    await patchState(next);
+  }
+
+  async function handleCancel() {
+    if (submitting) return;
+    if (!confirmCancel) {
+      haptic("light");
+      setConfirmCancel(true);
+      return;
+    }
+    haptic("error");
+    setConfirmCancel(false);
+    await patchState("cancelado");
   }
 
   function handleBack() {
@@ -180,19 +218,52 @@ export function OrderDetailPage({
             </div>
           </div>
         </section>
+
+        {/* Cancelar (sólo nuevo / preparando) */}
+        {canCancel && (
+          <section className="mt-6">
+            <button
+              type="button"
+              onClick={handleCancel}
+              disabled={submitting}
+              className={cn(
+                "w-full rounded-2xl border-2 px-4 py-3.5 text-sm font-semibold transition-colors disabled:opacity-60",
+                confirmCancel
+                  ? "border-[#9C3F12] bg-[#FCE4D6] text-[#9C3F12]"
+                  : "border-td-line text-td-mute hover:border-[#9C3F12] hover:text-[#9C3F12]"
+              )}
+            >
+              {confirmCancel
+                ? "Toca de nuevo para confirmar"
+                : "Cancelar pedido"}
+            </button>
+          </section>
+        )}
       </div>
 
       {/* Sticky bottom action */}
       {nextLabel && (
         <div className="bg-td-bg/95 border-td-line fixed right-0 bottom-0 left-0 border-t backdrop-blur lg:static lg:mx-auto lg:max-w-3xl lg:border-0 lg:bg-transparent lg:px-10 lg:pb-10 lg:backdrop-blur-none">
           <div className="mx-auto w-full max-w-3xl px-5 py-3 md:px-8 lg:px-0 lg:py-0">
-            <Button full size="lg" type="button" onClick={handleAdvance}>
-              {nextLabel}
-              {state === "camino" ? (
-                <CheckIcon size={16} />
-              ) : (
-                <ArrowIcon size={16} />
-              )}
+            {error && (
+              <p className="mb-2 text-center text-sm font-medium text-[#9C3F12]">
+                {error}
+              </p>
+            )}
+            <Button
+              full
+              size="lg"
+              type="button"
+              disabled={submitting}
+              onClick={handleAdvance}
+            >
+              {submitting ? "Guardando…" : nextLabel}
+              {!submitting &&
+                (state === "camino" ? (
+                  <CheckIcon size={16} />
+                ) : (
+                  <ArrowIcon size={16} />
+                ))}
             </Button>
           </div>
         </div>

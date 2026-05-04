@@ -5,10 +5,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import { haptic } from "@/lib/haptics";
-import {
-  type Storefront,
-  type StorefrontProduct,
-} from "@/lib/storefront";
+import { type Storefront, type StorefrontProduct } from "@/lib/storefront";
 import { cn, formatPrice } from "@/lib/utils";
 
 import { MoreIcon, PlusIcon, SearchIcon } from "@/components/neni-icons";
@@ -52,11 +49,14 @@ export function StorePage({ store }: StorePageProps) {
     setActiveCategory(category);
   }
 
+  const isClosed = store.status === "closed";
+
   return (
     <main className="bg-td-bg min-h-dvh pb-32">
       <div className="mx-auto max-w-md md:max-w-3xl lg:max-w-5xl">
         <Hero store={store} />
         <StoreHeader store={store} />
+        {isClosed && <ClosedBanner />}
         {showCategoryChips && (
           <CategoryChips
             categories={store.categories}
@@ -65,7 +65,11 @@ export function StorePage({ store }: StorePageProps) {
           />
         )}
         {featured && activeCategory === "Todos" && (
-          <Featured product={featured} onAdd={() => handleAdd(featured.id)} />
+          <Featured
+            product={featured}
+            onAdd={() => handleAdd(featured.id)}
+            disabled={isClosed}
+          />
         )}
         {filteredProducts.length === 0 ? (
           <EmptyCatalog />
@@ -76,14 +80,26 @@ export function StorePage({ store }: StorePageProps) {
               activeCategory === "Todos" ? store.featuredId : undefined
             }
             onAdd={handleAdd}
+            disabled={isClosed}
           />
         )}
       </div>
 
-      {cart.hydrated && cartCount > 0 && (
+      {cart.hydrated && cartCount > 0 && !isClosed && (
         <CartCta slug={store.slug} count={cartCount} total={cartTotal} />
       )}
     </main>
+  );
+}
+
+function ClosedBanner() {
+  return (
+    <div className="mx-5 mt-4 rounded-2xl bg-[#FCE4D6] px-4 py-3.5 text-[#9C3F12] lg:mx-0">
+      <div className="text-sm font-semibold">Esta tienda está cerrada</div>
+      <p className="mt-1 text-xs leading-relaxed">
+        Por ahora no se pueden hacer pedidos. Vuelve más tarde.
+      </p>
+    </div>
   );
 }
 
@@ -113,14 +129,14 @@ function Hero({ store }: { store: Storefront }) {
           <button
             type="button"
             aria-label="Buscar"
-            className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[rgba(255,255,255,0.25)] text-white backdrop-blur-[8px]"
+            className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[rgba(255,255,255,0.25)] text-white backdrop-blur-sm"
           >
             <SearchIcon size={16} />
           </button>
           <button
             type="button"
             aria-label="Más opciones"
-            className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[rgba(255,255,255,0.25)] text-white backdrop-blur-[8px]"
+            className="grid h-[34px] w-[34px] place-items-center rounded-full bg-[rgba(255,255,255,0.25)] text-white backdrop-blur-sm"
           >
             <MoreIcon size={16} />
           </button>
@@ -140,9 +156,9 @@ function StoreHeader({ store }: { store: Storefront }) {
     <div className="relative px-5 pt-3 lg:px-0">
       <div
         className={cn(
-          "border-td-bg absolute -top-[30px] left-[22px] grid h-[68px] w-[68px] place-items-center rounded-[20px] border-4 bg-white font-mono text-[22px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.08)] lg:left-0",
+          "border-td-bg absolute top-[-30px] left-[22px] grid h-[68px] w-[68px] place-items-center rounded-[20px] border-4 bg-white font-mono text-[22px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.08)] lg:left-0",
           // Si no hay promo (sin Hero), centra el avatar respecto al header.
-          !store.promo && "static -top-0 left-0 mb-2 lg:mt-2"
+          !store.promo && "static top-0 left-0 mb-2 lg:mt-2"
         )}
       >
         {store.initials}
@@ -152,9 +168,13 @@ function StoreHeader({ store }: { store: Storefront }) {
           <h1 className="m-0 text-[23px] font-semibold tracking-[-0.6px] md:text-2xl lg:text-3xl">
             {store.name}
           </h1>
-          {store.status === "open" && (
+          {store.status === "open" ? (
             <span className="bg-td-accent rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-[0.3px] text-white">
               ABIERTO
+            </span>
+          ) : (
+            <span className="bg-td-mute rounded-full px-2 py-0.5 text-[10px] font-semibold tracking-[0.3px] text-white">
+              CERRADO
             </span>
           )}
         </div>
@@ -257,9 +277,11 @@ function CategoryChips({
 function Featured({
   product,
   onAdd,
+  disabled,
 }: {
   product: StorefrontProduct;
   onAdd: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="px-5 pt-1 pb-3 lg:px-0">
@@ -288,8 +310,9 @@ function Featured({
             <button
               type="button"
               onClick={onAdd}
+              disabled={disabled}
               aria-label="Agregar al carrito"
-              className="bg-td-ink text-td-bg grid h-9 w-9 place-items-center rounded-full transition-transform active:scale-95"
+              className="bg-td-ink text-td-bg grid h-9 w-9 place-items-center rounded-full transition-transform active:scale-95 disabled:opacity-30"
             >
               <PlusIcon size={16} />
             </button>
@@ -304,10 +327,12 @@ function ProductGrid({
   products,
   featuredId,
   onAdd,
+  disabled,
 }: {
   products: StorefrontProduct[];
   featuredId?: string;
   onAdd: (id: string) => void;
+  disabled?: boolean;
 }) {
   const items = featuredId
     ? products.filter((p) => p.id !== featuredId)
@@ -329,6 +354,7 @@ function ProductGrid({
             key={product.id}
             product={product}
             onAdd={() => onAdd(product.id)}
+            disabled={disabled}
           />
         ))}
       </div>
@@ -339,9 +365,11 @@ function ProductGrid({
 function ProductCard({
   product,
   onAdd,
+  disabled,
 }: {
   product: StorefrontProduct;
   onAdd: () => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="border-td-line overflow-hidden rounded-[14px] border bg-white">
@@ -354,8 +382,9 @@ function ProductCard({
         <button
           type="button"
           onClick={onAdd}
+          disabled={disabled}
           aria-label={`Agregar ${product.name} al carrito`}
-          className="bg-td-ink text-td-bg absolute right-2 bottom-2 grid h-7 w-7 place-items-center rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.15)] transition-transform active:scale-95"
+          className="bg-td-ink text-td-bg absolute right-2 bottom-2 grid h-7 w-7 place-items-center rounded-full shadow-[0_2px_6px_rgba(0,0,0,0.15)] transition-transform active:scale-95 disabled:opacity-30"
         >
           <PlusIcon size={14} />
         </button>

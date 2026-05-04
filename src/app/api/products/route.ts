@@ -8,6 +8,7 @@ const bodySchema = z.object({
   name: z.string().min(1).max(60),
   price: z.number().positive(),
   description: z.string().max(240).optional().nullable(),
+  category: z.string().max(40).optional().nullable(),
   stock: z.enum(["Disponible", "Agotado"]).optional(),
   visible: z.boolean().optional(),
 });
@@ -33,6 +34,7 @@ export async function POST(req: Request) {
       name: parsed.data.name,
       price: parsed.data.price.toFixed(2),
       description: parsed.data.description ?? null,
+      category: parsed.data.category?.trim() || null,
       stock: parsed.data.stock ?? "Disponible",
       visible: parsed.data.visible ?? true,
     })

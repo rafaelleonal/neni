@@ -29,7 +29,9 @@ export default async function TiendaPage({
   params: Promise<Params>;
 }) {
   const { tienda } = await params;
+
   const store = await getPublicStorefront(tienda);
   if (!store) notFound();
+
   return <StorePage store={store} />;
 }

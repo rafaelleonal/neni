@@ -70,7 +70,7 @@ export async function getPublicStorefront(
     name: store.name,
     initials: nameToInitials(store.name),
     description: store.description ?? "",
-    status: "open",
+    status: store.isOpen ? "open" : "closed",
     categories: [ALL_CATEGORY],
     products: rows.map((p) => ({
       id: p.id,

@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   integer,
@@ -96,6 +96,15 @@ export const stores = pgTable(
     category: text("category").notNull(),
     description: text("description"),
     logoUrl: text("logo_url"),
+    isOpen: boolean("is_open").notNull().default(true),
+    categories: text("categories")
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
+    payments: text("payments")
+      .array()
+      .notNull()
+      .default(sql`ARRAY['card','oxxo','spei','cash']::text[]`),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -114,6 +123,7 @@ export const products = pgTable("products", {
   price: numeric("price", { precision: 10, scale: 2 }).notNull(),
   photoUrl: text("photo_url"),
   description: text("description"),
+  category: text("category"),
   stock: productStockEnum("stock").notNull().default("Disponible"),
   visible: boolean("visible").notNull().default(true),
   sortOrder: integer("sort_order").notNull().default(0),

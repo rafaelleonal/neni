@@ -47,6 +47,15 @@ export async function POST(req: Request) {
   if (!store) {
     return NextResponse.json({ error: "STORE_NOT_FOUND" }, { status: 404 });
   }
+  if (!store.isOpen) {
+    return NextResponse.json({ error: "STORE_CLOSED" }, { status: 409 });
+  }
+  if (!store.payments.includes(data.payment)) {
+    return NextResponse.json(
+      { error: "PAYMENT_NOT_ACCEPTED" },
+      { status: 400 }
+    );
+  }
 
   // 2. Traer los productos referenciados (sólo los que pertenecen a esta tienda
   //    y son visibles, para evitar comprar productos ocultos).

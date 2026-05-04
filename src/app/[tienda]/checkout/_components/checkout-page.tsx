@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
 import { haptic } from "@/lib/haptics";
 import { type Storefront } from "@/lib/storefront";
-import { cn, formatPrice } from "@/lib/utils";
+import { cn, formatPhone, formatPrice } from "@/lib/utils";
 
 import { ArrowIcon } from "@/components/neni-icons";
 
@@ -208,19 +208,19 @@ export function CheckoutPage({ store }: { store: Storefront }) {
                   placeholder="Sofía Pérez"
                   maxLength={60}
                   autoComplete="name"
-                  className="border-td-line focus:border-td-ink w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none transition-colors"
+                  className="border-td-line focus:border-td-ink w-full rounded-xl border bg-white px-3 py-2.5 text-sm transition-colors outline-none"
                 />
               </Field>
               <Field label="WhatsApp">
                 <div className="border-td-line focus-within:border-td-ink flex items-center gap-2 rounded-xl border bg-white px-3 py-2.5 transition-colors">
-                  <span className="flex items-center gap-1.5 border-r border-[var(--td-line)] pr-2">
+                  <span className="border-td-line flex items-center gap-1.5 border-r pr-2">
                     <span aria-hidden className="text-base leading-none">
                       🇲🇽
                     </span>
                     <span className="font-mono text-sm">+52</span>
                   </span>
                   <input
-                    value={formatPhoneInput(phoneDigits)}
+                    value={formatPhone(phoneDigits)}
                     onChange={(e) => setPhoneRaw(e.target.value)}
                     placeholder="55 1234 5678"
                     type="tel"
@@ -238,7 +238,7 @@ export function CheckoutPage({ store }: { store: Storefront }) {
                   maxLength={160}
                   rows={2}
                   autoComplete="street-address"
-                  className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug outline-none transition-colors"
+                  className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug transition-colors outline-none"
                 />
               </Field>
               <Field label="Notas (opcional)">
@@ -248,7 +248,7 @@ export function CheckoutPage({ store }: { store: Storefront }) {
                   placeholder="Sin cebolla, tocar timbre, etc."
                   maxLength={240}
                   rows={2}
-                  className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug outline-none transition-colors"
+                  className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug transition-colors outline-none"
                 />
               </Field>
             </div>
@@ -299,13 +299,6 @@ function Field({
       {children}
     </label>
   );
-}
-
-function formatPhoneInput(digits: string): string {
-  const a = digits.slice(0, 2);
-  const b = digits.slice(2, 6);
-  const c = digits.slice(6, 10);
-  return [a, b, c].filter(Boolean).join(" ");
 }
 
 function Header({ store, count }: { store: Storefront; count: number }) {

@@ -9,6 +9,7 @@ const patchBody = z.object({
   name: z.string().min(1).max(60).optional(),
   price: z.number().positive().optional(),
   description: z.string().max(240).nullable().optional(),
+  category: z.string().max(40).nullable().optional(),
   stock: z.enum(["Disponible", "Agotado"]).optional(),
   visible: z.boolean().optional(),
 });
@@ -35,6 +36,8 @@ export async function PATCH(
     updates.price = parsed.data.price.toFixed(2);
   if (parsed.data.description !== undefined)
     updates.description = parsed.data.description;
+  if (parsed.data.category !== undefined)
+    updates.category = parsed.data.category?.trim() || null;
   if (parsed.data.stock !== undefined) updates.stock = parsed.data.stock;
   if (parsed.data.visible !== undefined) updates.visible = parsed.data.visible;
 

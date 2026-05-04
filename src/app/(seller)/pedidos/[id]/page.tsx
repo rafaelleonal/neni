@@ -67,6 +67,7 @@ export default async function PedidoPage({
   return (
     <OrderDetailPage
       storeName={store.name}
+      orderId={order.id}
       order={{
         id: idLabel,
         who: order.customerName,
