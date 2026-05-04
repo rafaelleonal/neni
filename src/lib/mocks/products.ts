@@ -81,3 +81,19 @@ export const SELLER_PRODUCTS: SellerProduct[] = [
     visible: true,
   },
 ];
+
+export type SellerProductWithId = SellerProduct & {
+  id: string;
+  desc?: string;
+};
+
+export function getSellerProductById(
+  id: string
+): SellerProductWithId | undefined {
+  const match = id.match(/^p-(\d+)$/);
+  if (!match) return undefined;
+  const index = Number(match[1]);
+  const base = SELLER_PRODUCTS[index];
+  if (!base) return undefined;
+  return { ...base, id };
+}

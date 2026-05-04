@@ -36,7 +36,13 @@
       "Bash(ps -p 95988 -o pid,command)",
       "Bash(npx tsc *)",
       "Bash(curl -s http://localhost:61053/acceso)",
-      "Bash(pnpm run *)"
+      "Bash(pnpm run *)",
+      "Bash(node --experimental-strip-types -e ' *)",
+      "Bash(node --experimental-strip-types /tmp/test-drizzle.ts)",
+      "Bash(node --experimental-strip-types /tmp/test-drizzle.mjs)",
+      "Bash(mv /tmp/test-drizzle.mjs /Users/rafaelleon/Desktop/Developer/neni/test-drizzle.mjs)",
+      "Bash(sed -i '' 's|./src/db/schema.ts|./src/db/schema|' test-drizzle.mjs)",
+      "Bash(node --experimental-strip-types test-drizzle.mjs)"
     ]
   }
 }

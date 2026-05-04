@@ -5,7 +5,10 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useCart } from "@/lib/cart";
 import { haptic } from "@/lib/haptics";
-import { type Storefront, type StorefrontProduct } from "@/lib/mocks/stores";
+import {
+  type Storefront,
+  type StorefrontProduct,
+} from "@/lib/storefront";
 import { cn, formatPrice } from "@/lib/utils";
 
 import { MoreIcon, PlusIcon, SearchIcon } from "@/components/neni-icons";
@@ -17,7 +20,9 @@ type StorePageProps = {
 
 export function StorePage({ store }: StorePageProps) {
   const cart = useCart(store.slug);
-  const [activeCategory, setActiveCategory] = useState(store.categories[0]);
+  const [activeCategory, setActiveCategory] = useState(
+    store.categories[0] ?? "Todos"
+  );
 
   const cartCount = cart.items.reduce((sum, item) => sum + item.qty, 0);
   const cartTotal = useMemo(() => {
@@ -32,7 +37,10 @@ export function StorePage({ store }: StorePageProps) {
     return store.products.filter((p) => p.category === activeCategory);
   }, [store.products, activeCategory]);
 
-  const featured = store.products.find((p) => p.id === store.featuredId);
+  const featured = store.featuredId
+    ? store.products.find((p) => p.id === store.featuredId)
+    : undefined;
+  const showCategoryChips = store.categories.length > 1;
 
   function handleAdd(productId: string) {
     haptic("light");
@@ -49,19 +57,27 @@ export function StorePage({ store }: StorePageProps) {
       <div className="mx-auto max-w-md md:max-w-3xl lg:max-w-5xl">
         <Hero store={store} />
         <StoreHeader store={store} />
-        <CategoryChips
-          categories={store.categories}
-          active={activeCategory}
-          onChange={handleCategory}
-        />
+        {showCategoryChips && (
+          <CategoryChips
+            categories={store.categories}
+            active={activeCategory}
+            onChange={handleCategory}
+          />
+        )}
         {featured && activeCategory === "Todos" && (
           <Featured product={featured} onAdd={() => handleAdd(featured.id)} />
         )}
-        <ProductGrid
-          products={filteredProducts}
-          featuredId={activeCategory === "Todos" ? store.featuredId : undefined}
-          onAdd={handleAdd}
-        />
+        {filteredProducts.length === 0 ? (
+          <EmptyCatalog />
+        ) : (
+          <ProductGrid
+            products={filteredProducts}
+            featuredId={
+              activeCategory === "Todos" ? store.featuredId : undefined
+            }
+            onAdd={handleAdd}
+          />
+        )}
       </div>
 
       {cart.hydrated && cartCount > 0 && (
@@ -115,12 +131,23 @@ function Hero({ store }: { store: Storefront }) {
 }
 
 function StoreHeader({ store }: { store: Storefront }) {
+  const showStats =
+    store.rating !== undefined ||
+    store.delivery !== undefined ||
+    store.shipping !== undefined;
+
   return (
     <div className="relative px-5 pt-3 lg:px-0">
-      <div className="border-td-bg absolute -top-[30px] left-[22px] grid h-[68px] w-[68px] place-items-center rounded-[20px] border-4 bg-white font-mono text-[22px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.08)] lg:left-0">
+      <div
+        className={cn(
+          "border-td-bg absolute -top-[30px] left-[22px] grid h-[68px] w-[68px] place-items-center rounded-[20px] border-4 bg-white font-mono text-[22px] font-bold shadow-[0_4px_12px_rgba(0,0,0,0.08)] lg:left-0",
+          // Si no hay promo (sin Hero), centra el avatar respecto al header.
+          !store.promo && "static -top-0 left-0 mb-2 lg:mt-2"
+        )}
+      >
         {store.initials}
       </div>
-      <div className="mt-11">
+      <div className={cn(store.promo ? "mt-11" : "")}>
         <div className="flex items-center gap-2">
           <h1 className="m-0 text-[23px] font-semibold tracking-[-0.6px] md:text-2xl lg:text-3xl">
             {store.name}
@@ -131,24 +158,35 @@ function StoreHeader({ store }: { store: Storefront }) {
             </span>
           )}
         </div>
-        <div className="text-td-mute mt-1 text-[12.5px] md:text-sm">
-          {store.description}
-        </div>
+        {store.description && (
+          <div className="text-td-mute mt-1 text-[12.5px] md:text-sm">
+            {store.description}
+          </div>
+        )}
 
-        <div className="border-td-line mt-3 grid grid-cols-3 overflow-hidden rounded-[12px] border bg-white">
-          <Stat
-            label="Rating"
-            value={store.rating.toString()}
-            sub={`${store.reviews} reseñas`}
-            divider
-          />
-          <Stat label="Entrega" value={store.delivery} sub="" divider />
-          <Stat
-            label="Envío"
-            value={store.shipping.split(" ")[0]}
-            sub={store.shipping.split(" ").slice(1).join(" ")}
-          />
-        </div>
+        {showStats && (
+          <div className="border-td-line mt-3 grid grid-cols-3 overflow-hidden rounded-[12px] border bg-white">
+            <Stat
+              label="Rating"
+              value={store.rating !== undefined ? store.rating.toString() : "—"}
+              sub={
+                store.reviews !== undefined ? `${store.reviews} reseñas` : ""
+              }
+              divider
+            />
+            <Stat
+              label="Entrega"
+              value={store.delivery ?? "—"}
+              sub=""
+              divider
+            />
+            <Stat
+              label="Envío"
+              value={store.shipping?.split(" ")[0] ?? "—"}
+              sub={store.shipping?.split(" ").slice(1).join(" ") ?? ""}
+            />
+          </div>
+        )}
       </div>
     </div>
   );
@@ -233,30 +271,20 @@ function Featured({
             tone={product.tone}
             className="h-full"
           />
-          {product.tag && (
-            <div className="bg-td-accent absolute top-2 left-2 rounded-full px-2 py-0.5 text-[9.5px] font-bold tracking-[0.4px] text-white uppercase">
-              {product.tag}
-            </div>
-          )}
         </div>
         <div className="flex flex-col p-3.5 md:p-5">
           <div className="text-[15px] font-semibold tracking-[-0.3px] md:text-lg">
             {product.name}
           </div>
-          <div className="text-td-mute mt-1 text-[11.5px] md:text-sm">
-            {product.desc}
-          </div>
-          <div className="mt-auto flex items-baseline justify-between gap-2 pt-3">
-            <div className="flex items-baseline gap-2">
-              <span className="font-mono text-base font-semibold md:text-lg">
-                {formatPrice(product.price)}
-              </span>
-              {product.old && (
-                <span className="text-td-mute font-mono text-[12px] line-through">
-                  {formatPrice(product.old)}
-                </span>
-              )}
+          {product.desc && (
+            <div className="text-td-mute mt-1 text-[11.5px] md:text-sm">
+              {product.desc}
             </div>
+          )}
+          <div className="mt-auto flex items-baseline justify-between gap-2 pt-3">
+            <span className="font-mono text-base font-semibold md:text-lg">
+              {formatPrice(product.price)}
+            </span>
             <button
               type="button"
               onClick={onAdd}
@@ -323,11 +351,6 @@ function ProductCard({
           label={product.name.toLowerCase()}
           tone={product.tone}
         />
-        {product.tag && (
-          <div className="absolute top-2 left-2 rounded-full bg-[rgba(20,19,17,0.9)] px-2 py-0.5 text-[9.5px] font-semibold tracking-[0.3px] text-white uppercase">
-            {product.tag}
-          </div>
-        )}
         <button
           type="button"
           onClick={onAdd}
@@ -341,19 +364,26 @@ function ProductCard({
         <div className="text-[13px] leading-[1.2] font-medium">
           {product.name}
         </div>
-        <div className="text-td-mute mt-0.5 truncate text-[10.5px]">
-          {product.desc}
-        </div>
+        {product.desc && (
+          <div className="text-td-mute mt-0.5 truncate text-[10.5px]">
+            {product.desc}
+          </div>
+        )}
         <div className="mt-1.5 flex items-baseline gap-1.5">
           <span className="font-mono text-[13px] font-semibold">
             {formatPrice(product.price)}
           </span>
-          {product.old && (
-            <span className="text-td-mute font-mono text-[10.5px] line-through">
-              {formatPrice(product.old)}
-            </span>
-          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyCatalog() {
+  return (
+    <div className="px-5 pt-2 pb-10 lg:px-0">
+      <div className="border-td-line text-td-mute rounded-2xl border border-dashed bg-white px-6 py-12 text-center text-sm">
+        Esta tienda aún no tiene productos.
       </div>
     </div>
   );

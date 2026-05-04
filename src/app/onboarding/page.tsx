@@ -37,6 +37,8 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [data, setData] = useState<OnboardingData>(INITIAL_DATA);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isStepValid = (() => {
     switch (step) {
@@ -51,17 +53,38 @@ export default function OnboardingPage() {
     }
   })();
 
-  function handleNext() {
-    if (!isStepValid) return;
+  async function handleNext() {
+    if (!isStepValid || submitting) return;
     if (step < TOTAL_STEPS) {
       haptic("light");
       setStep((step + 1) as Step);
-    } else {
-      haptic("medium");
-      // TODO: hit API to create the store. For now, log and route to dashboard.
-      console.log("Onboarding complete:", data);
-      router.push("/dashboard");
+      return;
     }
+    haptic("medium");
+    setSubmitting(true);
+    setError(null);
+    const res = await fetch("/api/onboarding/complete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        businessName: data.businessName.trim(),
+        category: data.category,
+        productName: data.productName.trim(),
+        productPrice: Number(data.productPrice),
+      }),
+    });
+    setSubmitting(false);
+    if (!res.ok) {
+      haptic("error");
+      const err = await res.json().catch(() => ({}));
+      setError(
+        err.error === "STORE_ALREADY_EXISTS"
+          ? "Ya tienes una tienda creada."
+          : "No pudimos crear tu tienda. Intenta de nuevo."
+      );
+      return;
+    }
+    router.push("/dashboard");
   }
 
   function handleBack() {
@@ -108,15 +131,24 @@ export default function OnboardingPage() {
         </div>
 
         <div className="bg-td-bg sticky bottom-0 px-5 pt-3 pb-6 md:px-6 lg:static lg:bg-transparent lg:pt-2 lg:pb-0">
+          {error && (
+            <p className="mb-3 text-center text-sm font-medium text-[#9C3F12]">
+              {error}
+            </p>
+          )}
           <Button
             full
             size="lg"
-            disabled={!isStepValid}
+            disabled={!isStepValid || submitting}
             onClick={handleNext}
             type="button"
           >
-            {step === TOTAL_STEPS ? "Crear mi tienda" : "Continuar"}
-            <ArrowIcon size={16} />
+            {submitting
+              ? "Creando…"
+              : step === TOTAL_STEPS
+                ? "Crear mi tienda"
+                : "Continuar"}
+            {!submitting && <ArrowIcon size={16} />}
           </Button>
         </div>
       </div>

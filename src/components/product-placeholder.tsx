@@ -3,7 +3,7 @@ import { PRODUCT_TONES, type ProductTone } from "@/lib/tokens";
 export type { ProductTone };
 
 type Props = {
-  h?: number;
+  h?: number | string;
   label?: string;
   tone?: ProductTone;
   className?: string;

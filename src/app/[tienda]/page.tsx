@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getStorefront, listStorefrontSlugs } from "@/lib/mocks";
+import { getPublicStorefront } from "@/lib/storefront";
 
 import { StorePage } from "./_components/store-page";
 
 type Params = { tienda: string };
 
-export function generateStaticParams(): Params[] {
-  return listStorefrontSlugs().map((tienda) => ({ tienda }));
-}
+// Sin generateStaticParams — las tiendas se renderizan on-demand. Cuando
+// crezcan podemos prerenderizar las top-N y dejar el resto SSR.
 
 export async function generateMetadata({
   params,
@@ -16,10 +15,8 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { tienda } = await params;
-  const store = getStorefront(tienda);
-  if (!store) {
-    return { title: "Tienda no encontrada · Neni" };
-  }
+  const store = await getPublicStorefront(tienda);
+  if (!store) return { title: "Tienda no encontrada · Neni" };
   return {
     title: `${store.name} · Neni`,
     description: store.description,
@@ -32,9 +29,7 @@ export default async function TiendaPage({
   params: Promise<Params>;
 }) {
   const { tienda } = await params;
-  const store = getStorefront(tienda);
-
+  const store = await getPublicStorefront(tienda);
   if (!store) notFound();
-
   return <StorePage store={store} />;
 }

@@ -1,15 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
+import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 import { NeniLogo } from "@/components/neni-logo";
 
 import { SELLER_NAV } from "./seller-nav";
 
-export function SellerSidebar() {
+type SellerSidebarProps = {
+  storeName: string;
+  initials: string;
+};
+
+export function SellerSidebar({ storeName, initials }: SellerSidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleSignOut() {
+    haptic("selection");
+    await authClient.signOut();
+    router.push("/acceso");
+    router.refresh();
+  }
 
   return (
     <aside className="bg-td-ink text-td-bg sticky top-0 hidden h-dvh w-[220px] shrink-0 flex-col gap-1 px-4 py-6 lg:flex">
@@ -39,16 +54,25 @@ export function SellerSidebar() {
         })}
       </nav>
 
-      <div className="mt-auto rounded-xl bg-white/5 p-3">
-        <div className="flex items-center gap-2">
-          <div className="text-td-ink grid h-8 w-8 place-items-center rounded-lg bg-[#E9E3D4] font-mono text-[11px] font-bold">
-            TM
-          </div>
-          <div className="min-w-0">
-            <div className="truncate text-xs font-semibold">Tacos Don Memo</div>
-            <div className="text-[10px] opacity-60">Plan gratis</div>
+      <div className="mt-auto flex flex-col gap-2">
+        <div className="rounded-xl bg-white/5 p-3">
+          <div className="flex items-center gap-2">
+            <div className="text-td-ink grid h-8 w-8 place-items-center rounded-lg bg-[#E9E3D4] font-mono text-[11px] font-bold">
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <div className="truncate text-xs font-semibold">{storeName}</div>
+              <div className="text-[10px] opacity-60">Plan gratis</div>
+            </div>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="rounded-lg px-3 py-2 text-left text-[12.5px] text-white/55 transition-colors hover:bg-white/5 hover:text-white/85"
+        >
+          Cerrar sesión
+        </button>
       </div>
     </aside>
   );

@@ -3,6 +3,8 @@
 import { useState } from "react";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { haptic } from "@/lib/haptics";
 import { getStorefront } from "@/lib/mocks";
 import { cn } from "@/lib/utils";
@@ -28,6 +30,7 @@ const PAYMENT_METHODS = [
 ];
 
 export default function TiendaPage() {
+  const router = useRouter();
   const store = getStorefront(SELLER_SLUG);
   const [open, setOpen] = useState(true);
   const [payments, setPayments] = useState<Record<string, boolean>>({
@@ -36,6 +39,7 @@ export default function TiendaPage() {
     spei: true,
     cash: true,
   });
+  const [signingOut, setSigningOut] = useState(false);
 
   if (!store) return null;
 
@@ -47,6 +51,15 @@ export default function TiendaPage() {
   function toggleOpen() {
     haptic("selection");
     setOpen(!open);
+  }
+
+  async function handleSignOut() {
+    if (signingOut) return;
+    haptic("medium");
+    setSigningOut(true);
+    await authClient.signOut();
+    router.push("/acceso");
+    router.refresh();
   }
 
   return (
@@ -109,6 +122,20 @@ export default function TiendaPage() {
             last={i === PAYMENT_METHODS.length - 1}
           />
         ))}
+      </SettingsCard>
+
+      <SettingsCard title="Sesión">
+        <button
+          type="button"
+          onClick={handleSignOut}
+          disabled={signingOut}
+          className="text-td-mute hover:bg-td-bg hover:text-[#9C3F12] flex items-center gap-3 px-4 py-3 text-left text-sm font-medium transition-colors disabled:opacity-60"
+        >
+          <span className="flex-1">
+            {signingOut ? "Cerrando sesión…" : "Cerrar sesión"}
+          </span>
+          <ArrowIcon size={14} stroke="currentColor" />
+        </button>
       </SettingsCard>
 
       {store.promo && (

@@ -99,12 +99,12 @@ export const EMPTY_PRODUCTS_DEFAULTS: EmptyStateProps = {
   title: "Aún no tienes productos",
   sub: "Agrega tu primer producto para empezar a recibir pedidos.",
   illus: EMPTY_PRODUCTS_ILLUS,
-  cta: { label: "Agregar producto" },
+  cta: { label: "Agregar producto", href: "/productos/nuevo" },
 };
 
 export const EMPTY_ORDERS_DEFAULTS: EmptyStateProps = {
   title: "Sin pedidos todavía",
   sub: "Cuando alguien compre en tu tienda, sus pedidos aparecerán aquí.",
   illus: EMPTY_ORDERS_ILLUS,
-  cta: { label: "Compartir mi link" },
+  cta: { label: "Compartir mi link", href: "/tienda" },
 };

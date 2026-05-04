@@ -38,11 +38,11 @@ export function StepProduct({
         Después puedes agregar más, variantes y categorías.
       </p>
 
-      <div className="border-td-line mt-7 flex flex-col gap-3 rounded-2xl border bg-white p-3">
+      <div className="mt-7 flex flex-col gap-4">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="text-td-mute relative flex h-36 flex-col items-center justify-center gap-2 overflow-hidden rounded-xl bg-[repeating-linear-gradient(135deg,_#EFE9DD_0_10px,_#EFE9DDCC_10px_20px)]"
+          className="text-td-mute relative flex h-40 flex-col items-center justify-center gap-2 overflow-hidden rounded-2xl bg-[repeating-linear-gradient(135deg,_#EFE9DD_0_10px,_#EFE9DDCC_10px_20px)]"
         >
           {photo ? (
             <img
@@ -68,16 +68,25 @@ export function StepProduct({
           className="hidden"
         />
 
-        <input
-          value={name}
-          onChange={(e) => onNameChange(e.target.value)}
-          placeholder="Nombre del producto"
-          className="border-b-td-line border-0 border-b bg-transparent px-1 py-3 text-base outline-none"
-        />
+        <label className="block">
+          <span className="text-td-mute mb-2 block text-xs font-semibold tracking-[0.4px] uppercase">
+            Nombre
+          </span>
+          <input
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            placeholder="Tacos al pastor"
+            maxLength={60}
+            className="border-td-line focus:border-td-ink w-full rounded-2xl border-2 bg-white px-4 py-3.5 text-base font-medium transition-colors outline-none"
+          />
+        </label>
 
-        <div className="flex gap-3">
-          <div className="border-td-line bg-td-bg flex flex-1 items-center gap-1 rounded-xl border px-3 py-3 font-mono text-base font-medium">
-            <span className="text-td-mute">$</span>
+        <label className="block">
+          <span className="text-td-mute mb-2 block text-xs font-semibold tracking-[0.4px] uppercase">
+            Precio
+          </span>
+          <div className="border-td-line focus-within:border-td-ink flex items-center gap-2 rounded-2xl border-2 bg-white px-4 py-3.5 transition-colors">
+            <span className="text-td-mute font-mono text-base">$</span>
             <input
               type="text"
               inputMode="decimal"
@@ -86,16 +95,11 @@ export function StepProduct({
                 onPriceChange(e.target.value.replace(/[^0-9.]/g, ""))
               }
               placeholder="0.00"
-              className="w-full bg-transparent outline-none"
+              className="text-td-ink placeholder:text-td-mute flex-1 bg-transparent font-mono text-base font-medium outline-none"
             />
+            <span className="text-td-mute text-xs font-medium">MXN</span>
           </div>
-          <button
-            type="button"
-            className="border-td-line bg-td-bg text-td-mute rounded-xl border px-3 py-3 text-sm whitespace-nowrap"
-          >
-            + variantes
-          </button>
-        </div>
+        </label>
       </div>
     </div>
   );

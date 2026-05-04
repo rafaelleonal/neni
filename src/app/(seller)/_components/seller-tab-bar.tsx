@@ -7,7 +7,13 @@ import { cn } from "@/lib/utils";
 import { SELLER_NAV } from "./seller-nav";
 
 export function SellerTabBar() {
-  const pathname = usePathname();
+  const pathname = usePathname() ?? "";
+
+  // Hide tab bar on detail screens (where there is a sticky bottom action).
+  const isDetail =
+    SELLER_NAV.every((item) => pathname !== item.href) && pathname !== "";
+
+  if (isDetail) return null;
 
   return (
     <nav className="border-td-line fixed right-0 bottom-0 left-0 z-40 flex justify-around border-t bg-white px-5 pt-2.5 pb-7 lg:hidden">

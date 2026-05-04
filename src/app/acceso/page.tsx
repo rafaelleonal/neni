@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { authClient } from "@/lib/auth-client";
 import { haptic } from "@/lib/haptics";
 
 import { Button } from "@/components/ui/button";
@@ -21,27 +22,37 @@ function formatPhone(digits: string): string {
 export default function AccesoPage() {
   const router = useRouter();
   const [raw, setRaw] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const digits = raw.replace(/\D/g, "").slice(0, 10);
   const isValid = digits.length === 10;
 
   function onPhoneChange(value: string) {
     setRaw(value.replace(/\D/g, "").slice(0, 10));
+    setError(null);
   }
 
-  function handleContinue() {
-    if (!isValid) return;
+  async function handleContinue() {
+    if (!isValid || submitting) return;
     haptic("medium");
-    // TODO: pedir OTP por WhatsApp. Por ahora, simulamos sesión iniciada.
-    console.log("Login con WhatsApp:", `+52${digits}`);
-    router.push("/dashboard");
-  }
-
-  function handleGoogle() {
-    haptic("light");
-    // TODO: integrar OAuth Google.
-    console.log("Login con Google");
-    router.push("/dashboard");
+    setSubmitting(true);
+    setError(null);
+    // WhatsApp MX requiere "+521" + 10 dígitos (52 país + 1 mobile + número).
+    const phone = `+521${digits}`;
+    const { error: sendError } = await authClient.phoneNumber.sendOtp({
+      phoneNumber: phone,
+    });
+    setSubmitting(false);
+    if (sendError) {
+      haptic("error");
+      setError(
+        sendError.message ??
+          "No pudimos enviar el código. Verifica el número e intenta de nuevo."
+      );
+      return;
+    }
+    router.push(`/acceso/codigo?to=${encodeURIComponent(phone)}`);
   }
 
   function handleBack() {
@@ -112,35 +123,24 @@ export default function AccesoPage() {
             </p>
           </div>
 
+          {error && (
+            <p className="mt-3 text-center text-sm font-medium text-[#9C3F12]">
+              {error}
+            </p>
+          )}
+
           <div className="mt-8">
             <Button
               full
               size="lg"
               type="button"
-              disabled={!isValid}
+              disabled={!isValid || submitting}
               onClick={handleContinue}
             >
-              Continuar
-              <ArrowIcon size={16} />
+              {submitting ? "Enviando…" : "Continuar"}
+              {!submitting && <ArrowIcon size={16} />}
             </Button>
           </div>
-
-          <div className="my-6 flex items-center gap-3">
-            <span className="bg-td-line h-px flex-1" />
-            <span className="text-td-mute text-xs">o</span>
-            <span className="bg-td-line h-px flex-1" />
-          </div>
-
-          <Button
-            full
-            size="lg"
-            variant="white"
-            type="button"
-            onClick={handleGoogle}
-          >
-            <GoogleGlyph />
-            Continuar con Google
-          </Button>
 
           <p className="text-td-mute mt-10 text-center text-sm lg:mt-8">
             ¿Aún no tienes cuenta?{" "}
@@ -154,28 +154,5 @@ export default function AccesoPage() {
         </div>
       </div>
     </main>
-  );
-}
-
-function GoogleGlyph() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
-      <path
-        fill="#4285F4"
-        d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.71v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.61z"
-      />
-      <path
-        fill="#34A853"
-        d="M9 18c2.43 0 4.47-.81 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.32A9 9 0 0 0 9 18z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M3.97 10.71a5.41 5.41 0 0 1 0-3.42V4.97H.96a9 9 0 0 0 0 8.06l3.01-2.32z"
-      />
-      <path
-        fill="#EA4335"
-        d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.97l3.01 2.32C4.68 5.16 6.66 3.58 9 3.58z"
-      />
-    </svg>
   );
 }

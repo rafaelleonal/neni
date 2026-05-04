@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
 import { haptic } from "@/lib/haptics";
-import { type Storefront } from "@/lib/mocks";
+import { type Storefront } from "@/lib/storefront";
 import { cn, formatPrice } from "@/lib/utils";
 
 import { ArrowIcon } from "@/components/neni-icons";
@@ -64,12 +64,19 @@ const PAYMENT_BADGES: Record<PaymentMethod["id"], string> = {
 export function CheckoutPage({ store }: { store: Storefront }) {
   const router = useRouter();
   const cart = useCart(store.slug);
-  const [payment, setPayment] = useState<PaymentMethod["id"]>("card");
+  const [payment, setPayment] = useState<PaymentMethod["id"]>("cash");
   const [submitting, setSubmitting] = useState(false);
-  const [address] = useState({
-    line: "Orizaba 114, Roma Nte.",
-    detail: "Depto 3B · 30–45 min",
-  });
+  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [phoneRaw, setPhoneRaw] = useState("");
+  const [addressLine, setAddressLine] = useState("");
+  const [notes, setNotes] = useState("");
+
+  const phoneDigits = phoneRaw.replace(/\D/g, "").slice(0, 10);
+  const phoneValid = phoneDigits.length === 10;
+  const nameValid = name.trim().length > 0;
+  const addressValid = addressLine.trim().length > 0;
+  const formValid = nameValid && phoneValid && addressValid;
 
   const lineItems = useMemo(() => {
     return cart.items
@@ -88,13 +95,36 @@ export function CheckoutPage({ store }: { store: Storefront }) {
   const total = subtotal + shipping;
   const totalCount = lineItems.reduce((sum, item) => sum + item.qty, 0);
 
-  function handleSubmit() {
-    if (submitting || lineItems.length === 0) return;
+  async function handleSubmit() {
+    if (submitting || lineItems.length === 0 || !formValid) return;
     haptic("medium");
     setSubmitting(true);
-    const orderId = Date.now().toString().slice(-4);
+    setError(null);
+    const res = await fetch("/api/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        storeSlug: store.slug,
+        customerName: name.trim(),
+        customerPhone: `+521${phoneDigits}`,
+        address: addressLine.trim(),
+        notes: notes.trim() || null,
+        payment,
+        items: lineItems.map((item) => ({
+          productId: item.productId,
+          qty: item.qty,
+        })),
+      }),
+    });
+    if (!res.ok) {
+      setSubmitting(false);
+      haptic("error");
+      setError("No pudimos crear el pedido. Intenta de nuevo.");
+      return;
+    }
+    const json = (await res.json()) as { ok: true; orderId: string };
     cart.clear();
-    router.push(`/${store.slug}/pedido/${orderId}`);
+    router.push(`/${store.slug}/pedido/${json.orderId}`);
   }
 
   function handleQty(productId: string, nextQty: number) {
@@ -112,7 +142,9 @@ export function CheckoutPage({ store }: { store: Storefront }) {
     setPayment(id);
   }
 
-  if (cart.hydrated && lineItems.length === 0) {
+  // Mientras estamos creando el pedido (o navegando al tracking), no mostramos
+  // el empty-cart aunque el cart ya se haya limpiado — evita el flash.
+  if (cart.hydrated && lineItems.length === 0 && !submitting) {
     return <EmptyCart store={store} />;
   }
 
@@ -167,20 +199,59 @@ export function CheckoutPage({ store }: { store: Storefront }) {
             </div>
           </Section>
 
-          <Section title="Entrega">
-            <button
-              type="button"
-              className="border-td-line hover:border-td-mute flex items-center gap-3 rounded-2xl border bg-white px-4 py-3.5 text-left transition-colors"
-            >
-              <div className="bg-td-bg grid h-9 w-9 shrink-0 place-items-center rounded-xl text-base">
-                📍
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold">{address.line}</div>
-                <div className="text-td-mute text-xs">{address.detail}</div>
-              </div>
-              <span className="text-td-mute text-xs">Cambiar</span>
-            </button>
+          <Section title="Tus datos">
+            <div className="border-td-line flex flex-col gap-3 rounded-2xl border bg-white p-4">
+              <Field label="Nombre">
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Sofía Pérez"
+                  maxLength={60}
+                  autoComplete="name"
+                  className="border-td-line focus:border-td-ink w-full rounded-xl border bg-white px-3 py-2.5 text-sm outline-none transition-colors"
+                />
+              </Field>
+              <Field label="WhatsApp">
+                <div className="border-td-line focus-within:border-td-ink flex items-center gap-2 rounded-xl border bg-white px-3 py-2.5 transition-colors">
+                  <span className="flex items-center gap-1.5 border-r border-[var(--td-line)] pr-2">
+                    <span aria-hidden className="text-base leading-none">
+                      🇲🇽
+                    </span>
+                    <span className="font-mono text-sm">+52</span>
+                  </span>
+                  <input
+                    value={formatPhoneInput(phoneDigits)}
+                    onChange={(e) => setPhoneRaw(e.target.value)}
+                    placeholder="55 1234 5678"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    className="text-td-ink placeholder:text-td-mute flex-1 bg-transparent text-sm outline-none"
+                  />
+                </div>
+              </Field>
+              <Field label="Dirección de entrega">
+                <textarea
+                  value={addressLine}
+                  onChange={(e) => setAddressLine(e.target.value)}
+                  placeholder="Calle, número, colonia, referencia"
+                  maxLength={160}
+                  rows={2}
+                  autoComplete="street-address"
+                  className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug outline-none transition-colors"
+                />
+              </Field>
+              <Field label="Notas (opcional)">
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Sin cebolla, tocar timbre, etc."
+                  maxLength={240}
+                  rows={2}
+                  className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug outline-none transition-colors"
+                />
+              </Field>
+            </div>
           </Section>
         </div>
 
@@ -204,11 +275,37 @@ export function CheckoutPage({ store }: { store: Storefront }) {
       <PayCta
         method={payment}
         total={total}
-        disabled={submitting || lineItems.length === 0}
+        disabled={submitting || lineItems.length === 0 || !formValid}
+        submitting={submitting}
+        error={error}
         onClick={handleSubmit}
       />
     </main>
   );
+}
+
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="text-td-mute mb-1 block text-[11px] font-semibold tracking-[0.4px] uppercase">
+        {label}
+      </span>
+      {children}
+    </label>
+  );
+}
+
+function formatPhoneInput(digits: string): string {
+  const a = digits.slice(0, 2);
+  const b = digits.slice(2, 6);
+  const c = digits.slice(6, 10);
+  return [a, b, c].filter(Boolean).join(" ");
 }
 
 function Header({ store, count }: { store: Storefront; count: number }) {
@@ -318,15 +415,24 @@ function PayCta({
   method,
   total,
   disabled,
+  submitting,
+  error,
   onClick,
 }: {
   method: PaymentMethod["id"];
   total: number;
   disabled: boolean;
+  submitting: boolean;
+  error: string | null;
   onClick: () => void;
 }) {
   return (
     <div className="fixed right-4 bottom-8 left-4 mx-auto max-w-md md:max-w-lg">
+      {error && (
+        <p className="mb-2 rounded-xl bg-[#FCE4D6] px-3 py-2 text-center text-sm font-medium text-[#9C3F12]">
+          {error}
+        </p>
+      )}
       <button
         type="button"
         onClick={onClick}
@@ -338,7 +444,9 @@ function PayCta({
       >
         <div className="flex-1 text-left">
           <div className="text-[11px] tracking-[0.4px] uppercase opacity-60">
-            Pagar con {PAYMENT_LABEL_FOR_CTA[method]}
+            {submitting
+              ? "Creando pedido…"
+              : `Pagar con ${PAYMENT_LABEL_FOR_CTA[method]}`}
           </div>
           <div className="font-mono text-[17px] font-semibold">
             {formatPrice(total)}
