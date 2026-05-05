@@ -5,15 +5,6 @@ export const PHONE_PRODUCTS = [
   { name: "Mascarilla", price: 220, tone: "clay" as const, tag: "Nuevo" },
 ];
 
-export const PLAN_FEATURES = [
-  "Productos ilimitados",
-  "Tu propio subdominio neni.mx",
-  "Notificaciones por WhatsApp",
-  "OXXO · SPEI · Tarjeta · Efectivo",
-  "Estadísticas de ventas",
-  "Sin comisión por pedidos en efectivo",
-];
-
 export const PAYMENT_BADGES = [
   { label: "VISA", color: "#1A1F71" },
   { label: "MC", color: "#EB001B" },

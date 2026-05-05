@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { haptic } from "@/lib/haptics";
+import { PLANS, type PlanId } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
 import { NeniLogo } from "@/components/neni-logo";
@@ -13,9 +14,14 @@ import { SELLER_NAV } from "./seller-nav";
 type SellerSidebarProps = {
   storeName: string;
   initials: string;
+  plan: PlanId;
 };
 
-export function SellerSidebar({ storeName, initials }: SellerSidebarProps) {
+export function SellerSidebar({
+  storeName,
+  initials,
+  plan,
+}: SellerSidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -55,17 +61,27 @@ export function SellerSidebar({ storeName, initials }: SellerSidebarProps) {
       </nav>
 
       <div className="mt-auto flex flex-col gap-2">
-        <div className="rounded-xl bg-white/5 p-3">
+        <Link
+          href="/tienda/plan"
+          className="rounded-xl bg-white/5 p-3 transition-colors hover:bg-white/10"
+        >
           <div className="flex items-center gap-2">
             <div className="text-td-ink grid h-8 w-8 place-items-center rounded-lg bg-[#E9E3D4] font-mono text-[11px] font-bold">
               {initials}
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <div className="truncate text-xs font-semibold">{storeName}</div>
-              <div className="text-[10px] opacity-60">Plan gratis</div>
+              <div className="text-[10px] opacity-60">
+                Plan {PLANS[plan].name}
+              </div>
             </div>
+            {plan === "free" && (
+              <span className="bg-td-accent rounded-full px-1.5 py-0.5 text-[8.5px] font-bold tracking-[0.4px] text-white uppercase">
+                Pro
+              </span>
+            )}
           </div>
-        </div>
+        </Link>
         <button
           type="button"
           onClick={handleSignOut}

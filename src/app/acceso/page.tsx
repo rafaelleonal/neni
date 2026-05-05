@@ -65,7 +65,7 @@ export default function AccesoPage() {
             Bienvenida de vuelta
           </h1>
           <p className="text-td-mute mx-auto mt-3 max-w-[300px] text-center text-base leading-relaxed">
-            Entra con tu WhatsApp para administrar tu tienda.
+            Entra con tu WhatsApp para administrar tu negocio.
           </p>
 
           <label className="mt-10 block">
@@ -132,6 +132,26 @@ export default function AccesoPage() {
             >
               Crear tienda
             </Link>
+          </p>
+
+          <p className="text-td-mute mt-6 px-2 text-center text-[11px] leading-snug">
+            Al continuar aceptas los{" "}
+            <Link
+              href="/terminos"
+              target="_blank"
+              className="hover:text-td-ink underline-offset-4 hover:underline"
+            >
+              Términos
+            </Link>{" "}
+            y el{" "}
+            <Link
+              href="/privacidad"
+              target="_blank"
+              className="hover:text-td-ink underline-offset-4 hover:underline"
+            >
+              Aviso de privacidad
+            </Link>
+            .
           </p>
         </div>
       </div>

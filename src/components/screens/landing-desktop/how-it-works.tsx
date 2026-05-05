@@ -43,7 +43,7 @@ export function HowItWorks() {
             Cómo funciona
           </div>
           <h2 className="m-0 max-w-[720px] text-4xl leading-[0.95] font-semibold tracking-[-1.5px] md:text-5xl lg:text-[64px] lg:tracking-[-2.4px]">
-            De tu cocina a su carrito,
+            De tu negocio a su carrito,
             <br />
             en <span className="text-td-accent">15 minutos.</span>
           </h2>

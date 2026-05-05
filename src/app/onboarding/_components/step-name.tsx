@@ -17,7 +17,7 @@ export function StepName({ value, onChange }: StepNameProps) {
         ¿Cómo se llama tu negocio?
       </h1>
       <p className="text-td-mute mt-3 text-base leading-relaxed">
-        Será el nombre de tu tienda y de tu link público.
+        Será el nombre con el que tus clientes te encuentran y tu link público.
       </p>
 
       <input

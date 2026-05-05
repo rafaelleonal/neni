@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { haptic } from "@/lib/haptics";
 
@@ -37,6 +38,7 @@ export default function OnboardingPage() {
   const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [data, setData] = useState<OnboardingData>(INITIAL_DATA);
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,7 +50,9 @@ export default function OnboardingPage() {
         return data.category !== null;
       case 3:
         return (
-          data.productName.trim().length > 0 && Number(data.productPrice) > 0
+          data.productName.trim().length > 0 &&
+          Number(data.productPrice) > 0 &&
+          acceptedLegal
         );
     }
   })();
@@ -80,7 +84,7 @@ export default function OnboardingPage() {
       setError(
         err.error === "STORE_ALREADY_EXISTS"
           ? "Ya tienes una tienda creada."
-          : "No pudimos crear tu tienda. Intenta de nuevo."
+          : "No pudimos crear tu negocio. Intenta de nuevo."
       );
       return;
     }
@@ -131,6 +135,35 @@ export default function OnboardingPage() {
         </div>
 
         <div className="bg-td-bg sticky bottom-0 px-5 pt-3 pb-6 md:px-6 lg:static lg:bg-transparent lg:pt-2 lg:pb-0">
+          {step === TOTAL_STEPS && (
+            <label className="text-td-mute mb-3 flex cursor-pointer items-start gap-2.5 text-xs leading-snug">
+              <input
+                type="checkbox"
+                checked={acceptedLegal}
+                onChange={(e) => setAcceptedLegal(e.target.checked)}
+                className="border-td-line accent-td-ink mt-0.5 h-4 w-4 shrink-0 rounded"
+              />
+              <span>
+                He leído y acepto los{" "}
+                <Link
+                  href="/terminos"
+                  target="_blank"
+                  className="text-td-ink font-medium underline-offset-4 hover:underline"
+                >
+                  Términos
+                </Link>{" "}
+                y el{" "}
+                <Link
+                  href="/privacidad"
+                  target="_blank"
+                  className="text-td-ink font-medium underline-offset-4 hover:underline"
+                >
+                  Aviso de privacidad
+                </Link>
+                .
+              </span>
+            </label>
+          )}
           {error && (
             <p className="mb-3 text-center text-sm font-medium text-[#9C3F12]">
               {error}
@@ -146,7 +179,7 @@ export default function OnboardingPage() {
             {submitting
               ? "Creando…"
               : step === TOTAL_STEPS
-                ? "Crear mi tienda"
+                ? "Crear mi negocio"
                 : "Continuar"}
             {!submitting && <ArrowIcon size={16} />}
           </Button>

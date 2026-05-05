@@ -38,11 +38,11 @@ export function FeatureCards() {
             OXXO, SPEI, tarjeta y efectivo.
           </div>
           <div className="text-td-mute mt-2.5 text-[13px] leading-[1.5]">
-            Conecta Mercado Pago, Stripe o Conekta en un clic. Sin comisión en
-            efectivo.
+            Empieza cobrando en efectivo y suma pagos en línea cuando los
+            necesites. Sin comisión en efectivo.
           </div>
           <div className="mt-auto flex flex-wrap gap-1.5 pt-6">
-            {["Mercado Pago", "Stripe", "Conekta", "Clip"].map((x) => (
+            {["Efectivo", "Tarjeta", "OXXO", "SPEI"].map((x) => (
               <div
                 key={x}
                 className="bg-td-bg border-td-line text-td-mute rounded-full border px-2.5 py-1 font-mono text-[11px]"

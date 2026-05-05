@@ -223,7 +223,7 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
 
       <SettingsCard
         title="Categorías"
-        subtitle="Filtra los productos en tu tienda"
+        subtitle="Filtra los productos de tu catálogo"
       >
         <CategoriesEditor
           categories={categories}
@@ -496,7 +496,7 @@ function CategoriesEditor({
       </div>
       {categories.length === 0 && !adding && (
         <p className="text-td-mute mt-2 text-[11px]">
-          Crea categorías para agruparlas en tu tienda. Ejemplo: "Tacos",
+          Crea categorías para agrupar tus productos. Ejemplo: "Tacos",
           "Bebidas", "Postres".
         </p>
       )}

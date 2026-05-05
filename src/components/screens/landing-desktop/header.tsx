@@ -24,7 +24,7 @@ export function LandingHeader() {
           <Link href="/onboarding">Crear</Link>
         </Button>
         <Button asChild className="hidden md:inline-flex">
-          <Link href="/onboarding">Crear tienda gratis</Link>
+          <Link href="/onboarding">Empezar gratis</Link>
         </Button>
       </div>
     </div>

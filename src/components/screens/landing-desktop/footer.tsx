@@ -1,13 +1,24 @@
+import Link from "next/link";
+
 import { NeniLogo } from "@/components/neni-logo";
 
-const FOOTER_COLS = [
+type FooterLink = { label: string; href?: string };
+
+const FOOTER_COLS: { title: string; links: FooterLink[] }[] = [
   {
     title: "Producto",
-    links: ["Cómo funciona", "Precios", "Plantillas"],
+    links: [
+      { label: "Cómo funciona" },
+      { label: "Precios" },
+      { label: "Plantillas" },
+    ],
   },
   {
-    title: "Empresa",
-    links: ["Nosotros", "Legal", "Contacto"],
+    title: "Legal",
+    links: [
+      { label: "Aviso de privacidad", href: "/privacidad" },
+      { label: "Términos de servicio", href: "/terminos" },
+    ],
   },
 ];
 
@@ -22,8 +33,8 @@ export function LandingFooter() {
         <div className="col-span-2 md:col-span-3 lg:col-span-1">
           <NeniLogo size={32} />
           <div className="text-td-mute mt-4 max-w-[280px] text-[14px] leading-normal">
-            La plataforma de venta hecha para nenis mexicanas. De Tijuana a
-            Mérida.
+            La plataforma de venta para nenis, cafeterías, panaderías y
+            tiendas locales. De Tijuana a Mérida.
           </div>
           <div className="mt-[20px] flex gap-2">
             {SOCIAL.map((tag) => (
@@ -42,11 +53,21 @@ export function LandingFooter() {
               {col.title}
             </div>
             <div className="flex flex-col gap-[10px]">
-              {col.links.map((link) => (
-                <span key={link} className="text-td-mute text-[13.5px]">
-                  {link}
-                </span>
-              ))}
+              {col.links.map((link) =>
+                link.href ? (
+                  <Link
+                    key={link.label}
+                    href={link.href}
+                    className="text-td-mute hover:text-td-ink text-[13.5px] transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ) : (
+                  <span key={link.label} className="text-td-mute text-[13.5px]">
+                    {link.label}
+                  </span>
+                )
+              )}
             </div>
           </div>
         ))}
@@ -55,9 +76,12 @@ export function LandingFooter() {
       <div className="border-td-line text-td-mute flex flex-col justify-between gap-4 border-t pt-6 text-[12.5px] md:flex-row md:items-center md:gap-0">
         <div>© {year} Neni · Hecho en Chiapas</div>
         <div className="flex flex-wrap gap-3 md:gap-6">
-          <span>Privacidad</span>
-          <span>Términos</span>
-          <span>Cookies</span>
+          <Link href="/privacidad" className="hover:text-td-ink transition-colors">
+            Privacidad
+          </Link>
+          <Link href="/terminos" className="hover:text-td-ink transition-colors">
+            Términos
+          </Link>
           <span>Estado del servicio</span>
         </div>
         <div className="font-mono text-[11px]">🇲🇽 Español </div>

@@ -16,14 +16,18 @@ export function Hero() {
           <br />
           <span className="text-td-accent">neni.</span>
         </h1>
-        <p className="text-td-mute mt-8 mb-8 max-w-[460px] text-base leading-[1.4] md:text-lg lg:mt-[36px] lg:mb-[36px] lg:text-[20px]">
+        <p className="text-td-mute mt-8 mb-3 max-w-[460px] text-base leading-[1.4] md:text-lg lg:mt-[36px] lg:text-[20px]">
           Sube tu catálogo, comparte tu link y recibe cada pedido directo a tu
-          WhatsApp. Sin mensualidad, sin código, sin pretextos.
+          WhatsApp. Sin código, sin pretextos.
+        </p>
+        <p className="text-td-mute mb-8 max-w-[460px] text-sm leading-[1.5] md:text-base lg:mb-[36px] lg:text-[16px]">
+          Para nenis, cafeterías, panaderías, florerías y tiendas locales que
+          venden por WhatsApp.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <Button asChild size="lg">
             <Link href="/onboarding">
-              Crear mi tienda <ArrowIcon size={18} />
+              Crear mi negocio <ArrowIcon size={18} />
             </Link>
           </Button>
           <div className="border-td-line flex items-center gap-2 self-start rounded-full border bg-white px-[18px] py-3 font-mono text-[14px]">

@@ -84,6 +84,8 @@ export const productStockEnum = pgEnum("product_stock", [
   "Agotado",
 ]);
 
+export const storePlanEnum = pgEnum("store_plan", ["free", "pro"]);
+
 export const stores = pgTable(
   "stores",
   {
@@ -105,6 +107,8 @@ export const stores = pgTable(
       .array()
       .notNull()
       .default(sql`ARRAY['cash']::text[]`),
+    plan: storePlanEnum("plan").notNull().default("free"),
+    planRenewsAt: timestamp("plan_renews_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },

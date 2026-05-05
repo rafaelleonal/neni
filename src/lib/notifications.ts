@@ -1,7 +1,19 @@
 import "server-only";
 
 import type { OrderState } from "@/lib/mocks";
+import type { PlanId } from "@/lib/plans";
 import { sendWhatsapp } from "@/lib/twilio";
+
+const BUYER_NOTIFY_STATES: ReadonlySet<OrderState> = new Set([
+  "camino",
+  "entregado",
+  "cancelado",
+]);
+
+export function shouldNotifyBuyer(state: OrderState, plan: PlanId): boolean {
+  if (plan === "free") return false;
+  return BUYER_NOTIFY_STATES.has(state);
+}
 
 /**
  * Notificaciones por WhatsApp para los flujos de pedido. Todas son
@@ -109,6 +121,7 @@ export type BuyerStateArgs = {
   orderId: string;
   orderNumber: number;
   state: OrderState;
+  plan: PlanId;
 };
 
 export async function notifyBuyerStateChange({
@@ -118,7 +131,9 @@ export async function notifyBuyerStateChange({
   orderId,
   orderNumber,
   state,
+  plan,
 }: BuyerStateArgs): Promise<void> {
+  if (!shouldNotifyBuyer(state, plan)) return;
   const greeting = `Hola, sobre tu pedido ${paddedNumber(orderNumber)}:`;
   const detail = BUYER_BODIES[state](storeName);
   const link = `${appUrl()}/${storeSlug}/pedido/${orderId}`;

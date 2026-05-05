@@ -40,12 +40,14 @@ export function CheckoutPage({ store }: { store: Storefront }) {
     "idle" | "loading" | "ok" | "error"
   >("idle");
   const [notes, setNotes] = useState("");
+  const [acceptedLegal, setAcceptedLegal] = useState(false);
 
   const phoneDigits = phoneRaw.replace(/\D/g, "").slice(0, 10);
   const phoneValid = phoneDigits.length === 10;
   const nameValid = name.trim().length > 0;
   const addressValid = addressLine.trim().length > 0;
-  const formValid = nameValid && phoneValid && addressValid;
+  const formValid =
+    nameValid && phoneValid && addressValid && acceptedLegal;
 
   const lineItems = useMemo(() => {
     return cart.items
@@ -276,6 +278,27 @@ export function CheckoutPage({ store }: { store: Storefront }) {
               </p>
             )}
           </div>
+
+          <label className="text-td-mute mt-4 flex cursor-pointer items-start gap-2.5 text-[11.5px] leading-snug">
+            <input
+              type="checkbox"
+              checked={acceptedLegal}
+              onChange={(e) => setAcceptedLegal(e.target.checked)}
+              className="border-td-line accent-td-ink mt-0.5 h-4 w-4 shrink-0 rounded"
+            />
+            <span>
+              Acepto que {store.name} use mis datos para procesar este pedido.
+              Más info en el{" "}
+              <Link
+                href="/privacidad"
+                target="_blank"
+                className="text-td-ink font-medium underline-offset-4 hover:underline"
+              >
+                Aviso de privacidad
+              </Link>
+              .
+            </span>
+          </label>
         </Section>
       </div>
 

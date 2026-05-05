@@ -13,7 +13,11 @@ export default async function SellerLayout({
 
   return (
     <div className="bg-td-bg flex min-h-dvh">
-      <SellerSidebar storeName={store.name} initials={initials} />
+      <SellerSidebar
+        storeName={store.name}
+        initials={initials}
+        plan={store.plan}
+      />
       <main className="flex min-h-dvh flex-1 flex-col pb-24 lg:pb-0">
         {children}
       </main>

@@ -42,6 +42,7 @@ export async function PATCH(
     orderId: updated.id,
     orderNumber: updated.number,
     state: parsed.data.state,
+    plan: store.plan,
   }).catch((err) => {
     console.warn("[orders:notify-buyer] background failure:", err);
   });
