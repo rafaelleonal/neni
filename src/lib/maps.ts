@@ -1,26 +1,28 @@
 import "server-only";
 
-const SHORTLINK_HOSTS = [
-  "maps.app.goo.gl",
-  "goo.gl",
-  "g.co",
-  "maps.goo.gl",
-];
+// Hosts permitidos para hacer fetch externo. Acotamos a Google Maps
+// específicamente — `goo.gl` / `g.co` son shorteners genéricos donde un atacante
+// puede crear redirects arbitrarios (SSRF a IPs internas, metadata services).
+const SHORTLINK_HOST = "maps.app.goo.gl";
+const CANONICAL_HOSTS = new Set([
+  "www.google.com",
+  "google.com",
+  "maps.google.com",
+]);
 
-function isMapsShortlink(link: string): boolean {
+function tryUrl(link: string): URL | null {
   try {
     const url = new URL(link);
-    return SHORTLINK_HOSTS.some(
-      (h) => url.host === h || url.host.endsWith(`.${h}`)
-    );
+    if (!/^https?:$/.test(url.protocol)) return null;
+    return url;
   } catch {
-    return false;
+    return null;
   }
 }
 
 /**
  * Patrones donde aparecen coordenadas en respuestas de Google Maps:
- *   - `center=16.2350,-92.1335` (URL params, con o sin URL-encoding)
+ *   - `center=16.2350,-92.1335` (con o sin URL-encoding)
  *   - `@16.2350,-92.1335,18z` (URL canónica de Maps)
  *   - `?q=16.2350,-92.1335`
  */
@@ -57,27 +59,41 @@ function canonicalLink(lat: number, lng: number): string {
 
 /**
  * Convierte un shortlink (`maps.app.goo.gl/...`) en la URL canónica con
- * `query=lat,lng`. Hace un GET al shortlink y extrae las coordenadas del HTML
- * (Google embebe `center=lat%2Clng` en la página del preview).
+ * `query=lat,lng`. Sólo hacemos fetch al host exacto `maps.app.goo.gl` — el
+ * fetch va contra un dominio fijo de Google, no contra un destino arbitrario,
+ * por lo que no hay vector SSRF (incluso si Google redirigiera a una IP
+ * interna nunca lo veríamos al no seguir redirects manualmente; pero por
+ * defensa-en-profundidad usamos `redirect: "manual"` y solo leemos el body de
+ * la primera respuesta).
  *
- * Devuelve `null` si no logra extraer coordenadas o si el fetch falla/timeout.
+ * Devuelve `null` si no logra extraer coordenadas o si el host no está en la
+ * allowlist (input no confiable). Cuando devuelve `null`, el caller debe
+ * descartar el link, no guardarlo crudo.
  */
 export async function resolveMapsShortLink(
   link: string,
   timeoutMs = 5000
 ): Promise<string | null> {
-  if (!isMapsShortlink(link)) {
-    // Ya es URL completa — intentar extraer coords directo.
+  const url = tryUrl(link);
+  if (!url) return null;
+
+  // Caso 1: ya es URL canónica de Google Maps. Intentamos extraer coords.
+  if (CANONICAL_HOSTS.has(url.host)) {
     const coords = extractCoords(link);
-    return coords ? canonicalLink(...coords) : link;
+    return coords ? canonicalLink(...coords) : null;
   }
+
+  // Caso 2: shortlink oficial de Google. Hacemos fetch al host fijo.
+  if (url.host !== SHORTLINK_HOST) return null;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(link, {
       method: "GET",
-      redirect: "follow",
+      // No seguimos redirects automáticamente — el body inicial de
+      // maps.app.goo.gl ya contiene `center=lat,lng` embebido en la página.
+      redirect: "manual",
       signal: controller.signal,
       headers: {
         "User-Agent":
@@ -86,7 +102,11 @@ export async function resolveMapsShortLink(
           "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
       },
     });
-    if (!res.ok) return null;
+    // `redirect: "manual"` retorna `type: "opaqueredirect"` para 3xx; eso
+    // significa que el shortlink redirige sin servir HTML — no podemos
+    // resolverlo sin leer el header `Location` (no expuesto en fetch).
+    // Para los `maps.app.goo.gl/...` reales el body se sirve directo (200 OK).
+    if (!res.ok || res.type === "opaqueredirect") return null;
     const html = await res.text();
     const coords = extractCoords(html);
     return coords ? canonicalLink(...coords) : null;
@@ -98,10 +118,13 @@ export async function resolveMapsShortLink(
 }
 
 /**
- * Wrapper que NUNCA falla. Si no podemos resolver, devolvemos el link
- * original — la UI lo manejará con el botón "Ver ubicación" de fallback.
+ * Wrapper para uso en endpoints. Si no podemos resolver a una URL canónica,
+ * devolvemos `null` — el caller debe descartar el link en vez de guardar el
+ * input crudo. Esto cierra el riesgo de guardar `data:`, `javascript:` u otros
+ * schemes peligrosos que zod hubiera dejado pasar.
  */
-export async function expandLocationLink(link: string): Promise<string> {
-  const resolved = await resolveMapsShortLink(link);
-  return resolved ?? link;
+export async function expandLocationLink(
+  link: string
+): Promise<string | null> {
+  return resolveMapsShortLink(link);
 }

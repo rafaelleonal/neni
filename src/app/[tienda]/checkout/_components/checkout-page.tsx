@@ -6,60 +6,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/lib/cart";
 import { haptic } from "@/lib/haptics";
+import {
+  PAYMENT_LIST,
+  PAYMENTS,
+  type PaymentId,
+  type PaymentInfo,
+} from "@/lib/payments";
 import { type Storefront } from "@/lib/storefront";
 import { cn, formatPhone, formatPrice } from "@/lib/utils";
 
+import { BackButton } from "@/components/ui/back-button";
 import { ArrowIcon } from "@/components/neni-icons";
-
-type PaymentMethod = {
-  id: "card" | "oxxo" | "spei" | "cash";
-  title: string;
-  sub: string;
-  badge?: string;
-  color: string;
-};
-
-const PAYMENT_METHODS: PaymentMethod[] = [
-  {
-    id: "card",
-    title: "Tarjeta",
-    sub: "Visa, Mastercard, AMEX · Mercado Pago",
-    color: "#1A1A1A",
-  },
-  {
-    id: "oxxo",
-    title: "OXXO",
-    sub: "Paga en efectivo en cualquier OXXO",
-    badge: "Popular",
-    color: "#D8232A",
-  },
-  {
-    id: "spei",
-    title: "SPEI",
-    sub: "Transferencia bancaria · sin comisión",
-    color: "#2E5BFF",
-  },
-  {
-    id: "cash",
-    title: "Efectivo contra entrega",
-    sub: "Paga al recibir",
-    color: "#1FAA59",
-  },
-];
-
-const PAYMENT_LABEL_FOR_CTA: Record<PaymentMethod["id"], string> = {
-  card: "tarjeta",
-  oxxo: "OXXO",
-  spei: "SPEI",
-  cash: "efectivo",
-};
-
-const PAYMENT_BADGES: Record<PaymentMethod["id"], string> = {
-  card: "TC",
-  oxxo: "OXX",
-  spei: "SPI",
-  cash: "$$",
-};
 
 export function CheckoutPage({ store }: { store: Storefront }) {
   const router = useRouter();
@@ -67,12 +24,12 @@ export function CheckoutPage({ store }: { store: Storefront }) {
 
   // Sólo mostramos métodos que la tienda tiene activados.
   const availableMethods = useMemo(
-    () => PAYMENT_METHODS.filter((m) => store.payments.includes(m.id)),
+    () => PAYMENT_LIST.filter((m) => store.payments.includes(m.id)),
     [store.payments]
   );
   const defaultPayment = availableMethods[0]?.id ?? "cash";
 
-  const [payment, setPayment] = useState<PaymentMethod["id"]>(defaultPayment);
+  const [payment, setPayment] = useState<PaymentId>(defaultPayment);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
@@ -173,7 +130,7 @@ export function CheckoutPage({ store }: { store: Storefront }) {
     cart.add(productId);
   }
 
-  function handlePayment(id: PaymentMethod["id"]) {
+  function handlePayment(id: PaymentId) {
     haptic("selection");
     setPayment(id);
   }
@@ -410,13 +367,7 @@ function Header({ store, count }: { store: Storefront; count: number }) {
   return (
     <header className="border-b-td-line border-b">
       <div className="mx-auto flex max-w-md items-center gap-3 px-5 pt-5 pb-4 md:max-w-3xl md:px-8 lg:max-w-5xl lg:px-10">
-        <Link
-          href={`/${store.slug}`}
-          aria-label={`Regresar a ${store.name}`}
-          className="text-td-mute hover:text-td-ink -ml-2 grid h-9 w-9 place-items-center rounded-full text-2xl leading-none"
-        >
-          ‹
-        </Link>
+        <BackButton href={`/${store.slug}`} ariaLabel={`Regresar a ${store.name}`} />
         <div className="flex-1 text-base font-semibold lg:text-lg">
           Confirmar pedido
         </div>
@@ -463,7 +414,7 @@ function PayMethodRow({
   selected,
   onSelect,
 }: {
-  method: PaymentMethod;
+  method: PaymentInfo;
   selected: boolean;
   onSelect: () => void;
 }) {
@@ -482,17 +433,17 @@ function PayMethodRow({
         className="grid h-8 w-11 shrink-0 place-items-center rounded-md font-mono text-[11px] font-bold tracking-[0.5px] text-white"
         style={{ background: method.color }}
       >
-        {PAYMENT_BADGES[method.id]}
+        {method.badge}
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold">{method.title}</div>
+        <div className="text-sm font-semibold">{method.label}</div>
         <div className="text-td-mute mt-0.5 truncate text-[11.5px]">
           {method.sub}
         </div>
       </div>
-      {method.badge && (
+      {method.highlight && (
         <span className="bg-td-bg text-td-mute rounded-full px-2 py-0.5 text-[9.5px] font-bold tracking-[0.4px] uppercase">
-          {method.badge}
+          {method.highlight}
         </span>
       )}
       <span
@@ -517,7 +468,7 @@ function PayCta({
   error,
   onClick,
 }: {
-  method: PaymentMethod["id"];
+  method: PaymentId;
   total: number;
   disabled: boolean;
   submitting: boolean;
@@ -544,7 +495,7 @@ function PayCta({
           <div className="text-[11px] tracking-[0.4px] uppercase opacity-60">
             {submitting
               ? "Creando pedido…"
-              : `Pagar con ${PAYMENT_LABEL_FOR_CTA[method]}`}
+              : `Pagar con ${PAYMENTS[method].shortLabel}`}
           </div>
           <div className="font-mono text-[17px] font-semibold">
             {formatPrice(total)}

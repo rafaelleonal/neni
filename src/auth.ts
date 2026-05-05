@@ -38,10 +38,11 @@ export const auth = betterAuth({
       otpLength: 6,
       expiresIn: 300, // 5 min
       allowedAttempts: 3,
+      phoneNumberValidator: (value) => /^\+521\d{10}$/.test(value),
       sendOTP: async ({ phoneNumber: phone, code }) => {
-        const isDev = process.env.NODE_ENV !== "production";
+        const isDev =
+          process.env.NODE_ENV !== "production" && !process.env.VERCEL;
         if (isDev) {
-          // Log in dev — so you can copy it even if Twilio fails.
           console.log(
             `\n  ┌──────────────────────────────────────┐\n` +
               `  │  OTP DEV  ${phone.padEnd(28)}│\n` +
@@ -55,8 +56,6 @@ export const auth = betterAuth({
             `Tu código para acceder a Neni es ${code}. No lo compartas con nadie.`
           );
         } catch (e) {
-          // In production, propagate the error so Better Auth returns 500.
-          // In dev, the code is already in the console — we don't break the flow.
           if (!isDev) throw e;
           console.warn(
             "[twilio] envío falló (probablemente trial limit). Usa el código de arriba.",

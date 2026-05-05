@@ -11,9 +11,16 @@ import { sendWhatsapp } from "@/lib/twilio";
  */
 
 function appUrl(): string {
-  return (
-    process.env.BETTER_AUTH_URL?.replace(/\/$/, "") ?? "http://localhost:3000"
-  );
+  const url = process.env.BETTER_AUTH_URL?.replace(/\/$/, "");
+  if (url) return url;
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "BETTER_AUTH_URL no está configurado en producción — los links de las " +
+        "notificaciones quedarían apuntando a localhost."
+    );
+  }
+  return "http://localhost:3000";
 }
 
 function paddedNumber(n: number): string {
@@ -28,8 +35,6 @@ async function safeSend(to: string, body: string, debugTag: string) {
   const isDev = process.env.NODE_ENV !== "production";
 
   if (isDev) {
-    // Imprime el mensaje en consola siempre — útil cuando el sandbox de Twilio
-    // está topado (5/día) o el destinatario no hizo "join".
     const lines = body.split("\n");
     const width = Math.max(40, ...lines.map((l) => l.length));
     const top = "─".repeat(width + 2);
@@ -38,9 +43,7 @@ async function safeSend(to: string, body: string, debugTag: string) {
         `  │ WHATSAPP [${debugTag}] → ${to}`.padEnd(width + 4) +
         `│\n` +
         `  ├${top}┤\n` +
-        lines
-          .map((l) => `  │ ${l.padEnd(width)} │`)
-          .join("\n") +
+        lines.map((l) => `  │ ${l.padEnd(width)} │`).join("\n") +
         `\n  └${top}┘\n`
     );
   }
@@ -48,7 +51,6 @@ async function safeSend(to: string, body: string, debugTag: string) {
   try {
     await sendWhatsapp(to, body);
   } catch (err) {
-    // Loggeamos sin propagar — el flujo no debe romperse por la notif.
     if (!isDev) {
       console.warn(
         `[notifications:${debugTag}] no se pudo enviar a ${to}:`,
@@ -91,8 +93,7 @@ export async function notifySellerNewOrder({
 
 const BUYER_BODIES: Record<OrderState, (storeName: string) => string> = {
   nuevo: (storeName) => `${storeName} recibió tu pedido y lo está revisando.`,
-  preparando: (storeName) =>
-    `${storeName} ya está preparando tu pedido 🛍️`,
+  preparando: (storeName) => `${storeName} ya está preparando tu pedido 🛍️`,
   camino: (storeName) =>
     `Tu pedido va en camino. ${storeName} salió a entregártelo.`,
   entregado: (storeName) =>

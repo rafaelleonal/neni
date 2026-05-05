@@ -1,17 +1,28 @@
-export type OrderState =
-  | "nuevo"
-  | "preparando"
-  | "camino"
-  | "entregado"
-  | "cancelado";
+import { ORDER_STATES } from "@/lib/order-states";
+
+export {
+  ORDER_STATES,
+  ORDER_STATE_FLOW,
+  type OrderState,
+} from "@/lib/order-states";
+
+export const ORDER_STATE_STYLE = Object.fromEntries(
+  Object.entries(ORDER_STATES).map(([k, v]) => [
+    k,
+    { label: v.label, bg: v.bg, color: v.color },
+  ])
+) as Record<
+  keyof typeof ORDER_STATES,
+  { label: string; bg: string; color: string }
+>;
 
 export type Order = {
   id: string;
   who: string;
   items: string;
   total: number;
-  state: OrderState;
-  /** Human-readable relative or absolute timestamp, e.g. "Hace 5 min" or "Ayer 18:45". */
+  state: keyof typeof ORDER_STATES;
+  /** Human-readable relative or absolute timestamp, e.g. "5 min ago" or "Yesterday 18:45". */
   time: string;
 };
 
@@ -136,96 +147,3 @@ export const RECENT_ORDERS: Order[] = [
     time: "Ayer 19:40",
   },
 ];
-
-export const ORDER_STATE_STYLE: Record<
-  OrderState,
-  { bg: string; color: string; label: string }
-> = {
-  nuevo: { bg: "var(--td-accent)", color: "#fff", label: "Nuevo" },
-  preparando: { bg: "#F6E3B1", color: "#6E5A1E", label: "Preparando" },
-  camino: { bg: "#CFE1FF", color: "#1E3E7E", label: "En camino" },
-  entregado: {
-    bg: "var(--td-line)",
-    color: "var(--td-mute)",
-    label: "Entregado",
-  },
-  cancelado: { bg: "#FCE4D6", color: "#9C3F12", label: "Cancelado" },
-};
-
-/** Estados que componen el flujo lineal del pedido. `cancelado` queda fuera. */
-export const ORDER_STATE_FLOW: Exclude<OrderState, "cancelado">[] = [
-  "nuevo",
-  "preparando",
-  "camino",
-  "entregado",
-];
-
-const SAMPLE_LINES: OrderLineItem[][] = [
-  [
-    { name: "Taco al pastor", qty: 4, price: 25 },
-    { name: "Agua de horchata", qty: 1, price: 25 },
-    { name: "Quesadilla", qty: 1, price: 35 },
-  ],
-  [{ name: "Gringa de pastor", qty: 1, price: 75 }],
-  [
-    { name: "Taco al pastor", qty: 8, price: 25 },
-    { name: "Quesadilla", qty: 4, price: 35 },
-    { name: "Agua de horchata", qty: 4, price: 25 },
-  ],
-  [
-    { name: "Gringa de pastor", qty: 2, price: 75 },
-    { name: "Taco al pastor", qty: 4, price: 25 },
-    { name: "Quesadilla", qty: 1, price: 35 },
-  ],
-  [
-    { name: "Taco al pastor", qty: 4, price: 25 },
-    { name: "Agua de horchata", qty: 2, price: 25 },
-  ],
-];
-
-const SAMPLE_PHONES = [
-  "+52 55 1234 5678",
-  "+52 55 8765 4321",
-  "+52 55 4444 7777",
-  "+52 55 9999 1122",
-  "+52 55 3344 5566",
-];
-
-const SAMPLE_ADDRESSES = [
-  "Av. Ámsterdam 142, Hipódromo",
-  "Calle Tonalá 39, Roma Norte",
-  "Av. Insurgentes 1100, Del Valle",
-  "Calle Orizaba 87, Roma Sur",
-  undefined,
-];
-
-const SAMPLE_NOTES = [
-  "Sin cebolla porfa, gracias!",
-  undefined,
-  "Tocar el timbre dos veces",
-  undefined,
-  "Dejar con el portero si no estoy",
-];
-
-const SAMPLE_PAYMENTS: OrderDetail["payment"][] = [
-  "Efectivo",
-  "Transferencia",
-  "Tarjeta",
-];
-
-export function getOrderById(rawId: string): OrderDetail | undefined {
-  // Acepta tanto "4828" como "%234828" (URL-encoded "#4828").
-  const normalized = decodeURIComponent(rawId).replace(/^#/, "");
-  const lookup = `#${normalized}`;
-  const index = RECENT_ORDERS.findIndex((o) => o.id === lookup);
-  if (index === -1) return undefined;
-  const base = RECENT_ORDERS[index];
-  return {
-    ...base,
-    phone: SAMPLE_PHONES[index % SAMPLE_PHONES.length],
-    address: SAMPLE_ADDRESSES[index % SAMPLE_ADDRESSES.length],
-    notes: SAMPLE_NOTES[index % SAMPLE_NOTES.length],
-    payment: SAMPLE_PAYMENTS[index % SAMPLE_PAYMENTS.length],
-    lines: SAMPLE_LINES[index % SAMPLE_LINES.length],
-  };
-}

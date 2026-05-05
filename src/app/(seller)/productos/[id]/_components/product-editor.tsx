@@ -8,8 +8,11 @@ import { haptic } from "@/lib/haptics";
 import { cn, formatPrice } from "@/lib/utils";
 import type { ProductTone } from "@/components/product-placeholder";
 
-import { Button } from "@/components/ui/button";
-import { CheckIcon, PlusIcon } from "@/components/neni-icons";
+import { BackButton } from "@/components/ui/back-button";
+import { ConfirmDangerButton } from "@/components/ui/confirm-danger-button";
+import { FilterChip } from "@/components/ui/filter-chip";
+import { SubmitBar } from "@/components/ui/submit-bar";
+import { PlusIcon } from "@/components/neni-icons";
 import { ProductPlaceholder } from "@/components/product-placeholder";
 
 export type EditorProduct = {
@@ -51,7 +54,6 @@ export function ProductEditor(props: ProductEditorProps) {
     isEdit ? props.product.stock : "Disponible"
   );
   const [visible, setVisible] = useState(isEdit ? props.product.visible : true);
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -99,12 +101,6 @@ export function ProductEditor(props: ProductEditorProps) {
 
   async function handleDelete() {
     if (!isEdit || submitting) return;
-    if (!confirmDelete) {
-      haptic("light");
-      setConfirmDelete(true);
-      return;
-    }
-    haptic("error");
     setSubmitting(true);
     setError(null);
     const res = await fetch(`/api/products/${props.product.id}`, {
@@ -113,30 +109,17 @@ export function ProductEditor(props: ProductEditorProps) {
     setSubmitting(false);
     if (!res.ok) {
       setError("No pudimos eliminar el producto. Intenta de nuevo.");
-      setConfirmDelete(false);
       return;
     }
     router.push("/productos");
     router.refresh();
   }
 
-  function handleBack() {
-    haptic("selection");
-    router.push("/productos");
-  }
-
   return (
     <div className="bg-td-bg min-h-dvh">
       <div className="mx-auto w-full max-w-3xl px-5 pt-4 pb-32 md:px-8 md:pt-6 lg:px-10 lg:pb-12">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Atrás"
-            className="text-td-mute -ml-2 grid h-9 w-9 place-items-center rounded-full text-2xl leading-none"
-          >
-            ‹
-          </button>
+          <BackButton href="/productos" />
           <h1 className="flex-1 text-lg font-semibold lg:text-xl">
             {isEdit ? "Editar producto" : "Nuevo producto"}
           </h1>
@@ -239,23 +222,23 @@ export function ProductEditor(props: ProductEditorProps) {
               Categoría
             </span>
             <div className="flex flex-wrap gap-1.5">
-              <CategoryChip
+              <FilterChip
                 active={category === ""}
+                label="Sin categoría"
                 onClick={() => {
                   haptic("selection");
                   setCategory("");
                 }}
-                label="Sin categoría"
               />
               {availableCategories.map((cat) => (
-                <CategoryChip
+                <FilterChip
                   key={cat}
                   active={category === cat}
+                  label={cat}
                   onClick={() => {
                     haptic("selection");
                     setCategory(cat);
                   }}
-                  label={cat}
                 />
               ))}
             </div>
@@ -344,76 +327,24 @@ export function ProductEditor(props: ProductEditorProps) {
         {/* Eliminar (sólo edición) */}
         {isEdit && (
           <section className="mt-8">
-            <button
-              type="button"
-              onClick={handleDelete}
+            <ConfirmDangerButton
+              label="Eliminar producto"
+              onConfirm={handleDelete}
               disabled={submitting}
-              className={cn(
-                "w-full rounded-2xl border-2 px-4 py-3.5 text-sm font-semibold transition-colors disabled:opacity-60",
-                confirmDelete
-                  ? "border-[#9C3F12] bg-[#FCE4D6] text-[#9C3F12]"
-                  : "border-td-line text-td-mute hover:border-[#9C3F12] hover:text-[#9C3F12]"
-              )}
-            >
-              {confirmDelete
-                ? "Toca de nuevo para confirmar"
-                : "Eliminar producto"}
-            </button>
+            />
           </section>
         )}
       </div>
 
-      {/* Sticky bottom bar */}
-      <div className="bg-td-bg/95 border-td-line fixed right-0 bottom-0 left-0 border-t backdrop-blur lg:static lg:mx-auto lg:max-w-3xl lg:border-0 lg:bg-transparent lg:px-10 lg:pb-10 lg:backdrop-blur-none">
-        <div className="mx-auto w-full max-w-3xl px-5 py-3 md:px-8 lg:px-0 lg:py-0">
-          {error && (
-            <p className="mb-2 text-center text-sm font-medium text-[#9C3F12]">
-              {error}
-            </p>
-          )}
-          <Button
-            full
-            size="lg"
-            type="button"
-            disabled={!isValid || submitting}
-            onClick={handleSave}
-          >
-            {submitting
-              ? isEdit
-                ? "Guardando…"
-                : "Creando…"
-              : isEdit
-                ? "Guardar cambios"
-                : "Crear producto"}
-            {!submitting && <CheckIcon size={16} />}
-          </Button>
-        </div>
-      </div>
+      <SubmitBar
+        label={isEdit ? "Guardar cambios" : "Crear producto"}
+        submittingLabel={isEdit ? "Guardando…" : "Creando…"}
+        submitting={submitting}
+        disabled={!isValid}
+        error={error}
+        onSubmit={handleSave}
+      />
     </div>
   );
 }
 
-function CategoryChip({
-  active,
-  label,
-  onClick,
-}: {
-  active: boolean;
-  label: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-        active
-          ? "bg-td-ink text-td-bg border-td-ink"
-          : "border-td-line text-td-ink hover:bg-td-bg bg-white"
-      )}
-    >
-      {label}
-    </button>
-  );
-}

@@ -6,17 +6,17 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { haptic } from "@/lib/haptics";
+import { PAYMENT_LIST, type PaymentId } from "@/lib/payments";
 import { cn } from "@/lib/utils";
 
-import { Button } from "@/components/ui/button";
+import { Field, SettingsCard } from "@/components/ui/form";
+import { Toggle } from "@/components/ui/toggle";
 import {
   ArrowIcon,
   CheckIcon,
   LinkIcon,
   WaIcon,
 } from "@/components/neni-icons";
-
-type PaymentId = "card" | "oxxo" | "spei" | "cash";
 
 type StoreInitial = {
   name: string;
@@ -26,48 +26,6 @@ type StoreInitial = {
   categories: string[];
   payments: string[];
 };
-
-const PAYMENT_METHODS: ReadonlyArray<{
-  id: PaymentId;
-  label: string;
-  sub: string;
-  badge: string;
-  color: string;
-  available: boolean;
-}> = [
-  {
-    id: "cash",
-    label: "Efectivo contra entrega",
-    sub: "Cobras al entregar el pedido",
-    badge: "$$",
-    color: "#1FAA59",
-    available: true,
-  },
-  {
-    id: "card",
-    label: "Tarjeta",
-    sub: "Visa, Mastercard, AMEX",
-    badge: "TC",
-    color: "#1A1A1A",
-    available: false,
-  },
-  {
-    id: "oxxo",
-    label: "OXXO",
-    sub: "Pago en efectivo en cualquier tienda",
-    badge: "OXX",
-    color: "#D8232A",
-    available: false,
-  },
-  {
-    id: "spei",
-    label: "SPEI",
-    sub: "Transferencia bancaria sin comisión",
-    badge: "SPI",
-    color: "#2E5BFF",
-    available: false,
-  },
-];
 
 export function TiendaSettings({ initial }: { initial: StoreInitial }) {
   const router = useRouter();
@@ -89,48 +47,100 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
     trimmedDesc !== initial.description.trim();
   const formValid = trimmedName.length > 0;
 
-  async function handleToggleOpen() {
-    if (togglingOpen) return;
-    const next = !isOpen;
-    setIsOpen(next); // optimistic
-    setTogglingOpen(true);
-    haptic("medium");
+  async function patchStore(
+    body: object,
+    onRevert: () => void,
+    errorMessage: string
+  ): Promise<boolean> {
     setError(null);
     const res = await fetch("/api/stores/me", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isOpen: next }),
+      body: JSON.stringify(body),
     });
-    setTogglingOpen(false);
     if (!res.ok) {
-      setIsOpen(!next); // revert
+      onRevert();
       haptic("error");
-      setError("No pudimos actualizar el estado. Intenta de nuevo.");
-      return;
+      setError(errorMessage);
+      return false;
     }
     router.refresh();
+    return true;
+  }
+
+  async function handleToggleOpen() {
+    if (togglingOpen) return;
+    const next = !isOpen;
+    setIsOpen(next);
+    setTogglingOpen(true);
+    haptic("medium");
+    await patchStore(
+      { isOpen: next },
+      () => setIsOpen(!next),
+      "No pudimos actualizar el estado. Intenta de nuevo."
+    );
+    setTogglingOpen(false);
   }
 
   async function handleSave() {
     if (!dirty || !formValid || savingForm) return;
     setSavingForm(true);
-    setError(null);
     haptic("medium");
-    const res = await fetch("/api/stores/me", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: trimmedName,
-        description: trimmedDesc || null,
-      }),
-    });
+    await patchStore(
+      { name: trimmedName, description: trimmedDesc || null },
+      () => {},
+      "No pudimos guardar los cambios. Intenta de nuevo."
+    );
     setSavingForm(false);
-    if (!res.ok) {
+  }
+
+  async function handleAddCategory(raw: string) {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    if (categories.some((c) => c.toLowerCase() === trimmed.toLowerCase())) {
       haptic("error");
-      setError("No pudimos guardar los cambios. Intenta de nuevo.");
       return;
     }
-    router.refresh();
+    const previous = categories;
+    const next = [...categories, trimmed];
+    setCategories(next);
+    haptic("selection");
+    await patchStore(
+      { categories: next },
+      () => setCategories(previous),
+      "No pudimos guardar las categorías. Intenta de nuevo."
+    );
+  }
+
+  async function handleRemoveCategory(name: string) {
+    const previous = categories;
+    const next = categories.filter((c) => c !== name);
+    setCategories(next);
+    haptic("selection");
+    await patchStore(
+      { categories: next },
+      () => setCategories(previous),
+      "No pudimos guardar las categorías. Intenta de nuevo."
+    );
+  }
+
+  async function handleTogglePayment(id: PaymentId) {
+    const isActive = payments.includes(id);
+    if (isActive && payments.length <= 1) {
+      haptic("error");
+      return;
+    }
+    const previous = payments;
+    const next = isActive
+      ? payments.filter((p) => p !== id)
+      : [...payments, id];
+    setPayments(next);
+    haptic("selection");
+    await patchStore(
+      { payments: next },
+      () => setPayments(previous),
+      "No pudimos guardar los métodos de pago. Intenta de nuevo."
+    );
   }
 
   async function handleSignOut() {
@@ -150,74 +160,8 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // clipboard puede fallar — abre en nueva tab como fallback.
       window.open(`/${initial.slug}`, "_blank");
     }
-  }
-
-  async function persistCategories(next: string[]) {
-    const previous = categories;
-    setCategories(next); // optimistic
-    setError(null);
-    const res = await fetch("/api/stores/me", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ categories: next }),
-    });
-    if (!res.ok) {
-      setCategories(previous); // revert
-      haptic("error");
-      setError("No pudimos guardar las categorías. Intenta de nuevo.");
-      return;
-    }
-    router.refresh();
-  }
-
-  async function handleAddCategory(raw: string) {
-    const trimmed = raw.trim();
-    if (!trimmed) return;
-    const exists = categories.some(
-      (c) => c.toLowerCase() === trimmed.toLowerCase()
-    );
-    if (exists) {
-      haptic("error");
-      return;
-    }
-    haptic("selection");
-    await persistCategories([...categories, trimmed]);
-  }
-
-  async function handleRemoveCategory(name: string) {
-    haptic("selection");
-    await persistCategories(categories.filter((c) => c !== name));
-  }
-
-  async function handleTogglePayment(id: PaymentId) {
-    const isActive = payments.includes(id);
-    // No permitir desactivar el último método activo.
-    if (isActive && payments.length <= 1) {
-      haptic("error");
-      return;
-    }
-    haptic("selection");
-    const next = isActive
-      ? payments.filter((p) => p !== id)
-      : [...payments, id];
-    const previous = payments;
-    setPayments(next);
-    setError(null);
-    const res = await fetch("/api/stores/me", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ payments: next }),
-    });
-    if (!res.ok) {
-      setPayments(previous);
-      haptic("error");
-      setError("No pudimos guardar los métodos de pago. Intenta de nuevo.");
-      return;
-    }
-    router.refresh();
   }
 
   return (
@@ -229,11 +173,7 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
         </div>
       </header>
 
-      <PublicLink
-        slug={initial.slug}
-        copied={copied}
-        onCopy={handleCopy}
-      />
+      <PublicLink slug={initial.slug} copied={copied} onCopy={handleCopy} />
       <StatusCard
         open={isOpen}
         disabled={togglingOpen}
@@ -251,7 +191,7 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
               }}
               maxLength={60}
               placeholder="Tacos Don Memo"
-              className="border-td-line focus:border-td-ink w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-medium outline-none transition-colors"
+              className="border-td-line focus:border-td-ink w-full rounded-xl border bg-white px-3 py-2.5 text-sm font-medium transition-colors outline-none"
             />
           </Field>
           <Field
@@ -267,7 +207,7 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
               maxLength={160}
               rows={2}
               placeholder="Tacos al pastor de la mejor cocina del barrio"
-              className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug outline-none transition-colors"
+              className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug transition-colors outline-none"
             />
             <div className="text-td-mute mt-1 text-right text-[11px]">
               {description.length}/160
@@ -297,7 +237,7 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
         subtitle="Activa los que quieras aceptar"
       >
         <div className="flex flex-col">
-          {PAYMENT_METHODS.map((method, i) => {
+          {PAYMENT_LIST.map((method, i) => {
             const isActive = payments.includes(method.id);
             const isLastActive = isActive && payments.length === 1;
             return (
@@ -308,7 +248,7 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
                 disabled={!method.available}
                 cantDeactivate={isLastActive}
                 onToggle={() => handleTogglePayment(method.id)}
-                last={i === PAYMENT_METHODS.length - 1}
+                last={i === PAYMENT_LIST.length - 1}
               />
             );
           })}
@@ -329,7 +269,6 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
         </button>
       </SettingsCard>
 
-      {/* Sticky bottom save bar */}
       {(dirty || error) && (
         <div className="bg-td-bg/95 border-td-line fixed right-0 bottom-0 left-0 border-t backdrop-blur lg:static lg:mx-auto lg:max-w-3xl lg:border-0 lg:bg-transparent lg:px-10 lg:pb-10 lg:backdrop-blur-none">
           <div className="mx-auto w-full max-w-3xl px-5 py-3 md:px-8 lg:px-0 lg:py-0">
@@ -339,16 +278,15 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
               </p>
             )}
             {dirty && (
-              <Button
-                full
-                size="lg"
+              <button
                 type="button"
                 disabled={!formValid || savingForm}
                 onClick={handleSave}
+                className="bg-td-ink text-td-bg flex w-full items-center justify-center gap-2 rounded-full px-6 py-4 text-base font-semibold tracking-[-0.1px] transition-transform select-none active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
               >
                 {savingForm ? "Guardando…" : "Guardar cambios"}
                 {!savingForm && <CheckIcon size={16} />}
-              </Button>
+              </button>
             )}
           </div>
         </div>
@@ -441,48 +379,13 @@ function StatusCard({
             : "Nadie puede hacer pedidos hasta que la abras"}
         </div>
       </div>
-      <Toggle pressed={open} disabled={disabled} onToggle={onToggle} />
+      <Toggle
+        pressed={open}
+        disabled={disabled}
+        onToggle={onToggle}
+        ariaLabel={open ? "Cerrar tienda" : "Abrir tienda"}
+      />
     </div>
-  );
-}
-
-function SettingsCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="border-td-line mb-4 rounded-2xl border bg-white">
-      <header className="border-b-td-line border-b px-4 pt-4 pb-3">
-        <h2 className="text-sm font-semibold">{title}</h2>
-        {subtitle && <p className="text-td-mute mt-0.5 text-xs">{subtitle}</p>}
-      </header>
-      <div className="flex flex-col">{children}</div>
-    </section>
-  );
-}
-
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string;
-  hint?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="block">
-      <span className="text-td-mute mb-1.5 block text-[11px] font-semibold tracking-[0.4px] uppercase">
-        {label}
-      </span>
-      {children}
-      {hint && <p className="text-td-mute mt-1.5 text-[11px]">{hint}</p>}
-    </label>
   );
 }
 
@@ -505,37 +408,6 @@ function ReadonlyRow({
       </div>
       {hint && <p className="text-td-mute mt-1.5 text-[11px]">{hint}</p>}
     </div>
-  );
-}
-
-function Toggle({
-  pressed,
-  disabled,
-  onToggle,
-}: {
-  pressed: boolean;
-  disabled: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={pressed}
-      onClick={onToggle}
-      disabled={disabled}
-      className={cn(
-        "relative h-6 w-10 shrink-0 rounded-full transition-colors disabled:opacity-60",
-        pressed ? "bg-td-accent" : "bg-td-line"
-      )}
-    >
-      <span
-        className={cn(
-          "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-[left]",
-          pressed ? "left-[18px]" : "left-0.5"
-        )}
-      />
-    </button>
   );
 }
 
@@ -571,7 +443,6 @@ function CategoriesEditor({
     }
     onAdd(value);
     setDraft("");
-    // Mantener el input abierto para agregar más rápido. Foco se mantiene.
     requestAnimationFrame(() => inputRef.current?.focus());
   }
 
@@ -641,7 +512,7 @@ function PaymentRow({
   onToggle,
   last,
 }: {
-  method: (typeof PAYMENT_METHODS)[number];
+  method: (typeof PAYMENT_LIST)[number];
   active: boolean;
   disabled: boolean;
   cantDeactivate: boolean;
@@ -677,6 +548,7 @@ function PaymentRow({
         pressed={active}
         disabled={disabled || cantDeactivate}
         onToggle={onToggle}
+        ariaLabel={`Activar ${method.label}`}
       />
     </div>
   );

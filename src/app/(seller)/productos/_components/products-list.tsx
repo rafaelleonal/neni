@@ -7,7 +7,10 @@ import { useRouter } from "next/navigation";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
-import { ArrowIcon, PlusIcon, SearchIcon } from "@/components/neni-icons";
+import { FilterChip, FilterChipRow } from "@/components/ui/filter-chip";
+import { SearchInput } from "@/components/ui/search-input";
+import { Toggle } from "@/components/ui/toggle";
+import { ArrowIcon, PlusIcon } from "@/components/neni-icons";
 import {
   ProductPlaceholder,
   type ProductTone,
@@ -16,7 +19,7 @@ import {
 export type ProductRow = {
   id: string;
   name: string;
-  price: string; // viene como string desde drizzle numeric
+  price: string;
   stock: "Disponible" | "Agotado";
   visible: boolean;
   tone: ProductTone;
@@ -72,7 +75,6 @@ export function ProductsList({ initial }: { initial: ProductRow[] }) {
   async function toggleVisible(id: string) {
     haptic("selection");
     const prev = products;
-    // Optimistic update.
     setProducts((curr) =>
       curr.map((p) => (p.id === id ? { ...p, visible: !p.visible } : p))
     );
@@ -84,18 +86,11 @@ export function ProductsList({ initial }: { initial: ProductRow[] }) {
       body: JSON.stringify({ visible: !target.visible }),
     });
     if (!res.ok) {
-      // Revertir si el backend falló.
       setProducts(prev);
       haptic("error");
       return;
     }
-    // Revalida server data (KPIs del dashboard, etc.) en segundo plano.
     startTransition(() => router.refresh());
-  }
-
-  function handleFilter(next: Filter) {
-    haptic("selection");
-    setFilter(next);
   }
 
   return (
@@ -109,7 +104,20 @@ export function ProductsList({ initial }: { initial: ProductRow[] }) {
 
       <AddProductCard />
 
-      <Filters value={filter} onChange={handleFilter} counts={counts} />
+      <FilterChipRow>
+        {FILTER_LABELS.map((f) => (
+          <FilterChip
+            key={f.id}
+            active={filter === f.id}
+            label={f.label}
+            count={counts[f.id]}
+            onClick={() => {
+              haptic("selection");
+              setFilter(f.id);
+            }}
+          />
+        ))}
+      </FilterChipRow>
 
       {filteredProducts.length === 0 ? (
         <EmptyResults query={query} filter={filter} />
@@ -125,7 +133,6 @@ export function ProductsList({ initial }: { initial: ProductRow[] }) {
         </div>
       )}
 
-      {/* FAB - mobile only */}
       <Link
         href="/productos/nuevo"
         aria-label="Agregar producto"
@@ -138,14 +145,17 @@ export function ProductsList({ initial }: { initial: ProductRow[] }) {
   );
 }
 
-type HeaderProps = {
+function Header({
+  total,
+  visible,
+  query,
+  onQueryChange,
+}: {
   total: number;
   visible: number;
   query: string;
   onQueryChange: (value: string) => void;
-};
-
-function Header({ total, visible, query, onQueryChange }: HeaderProps) {
+}) {
   return (
     <header className="mb-6">
       <div className="flex items-center gap-3">
@@ -158,24 +168,12 @@ function Header({ total, visible, query, onQueryChange }: HeaderProps) {
         </div>
       </div>
 
-      <div className="border-td-line mt-4 flex items-center gap-2 rounded-xl border bg-white px-3 py-2.5">
-        <SearchIcon size={16} stroke="var(--td-mute)" />
-        <input
+      <div className="mt-4">
+        <SearchInput
           value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
+          onChange={onQueryChange}
           placeholder="Buscar por nombre"
-          className="text-td-ink placeholder:text-td-mute flex-1 bg-transparent text-sm outline-none"
         />
-        {query && (
-          <button
-            type="button"
-            onClick={() => onQueryChange("")}
-            className="text-td-mute hover:text-td-ink text-lg leading-none"
-            aria-label="Limpiar búsqueda"
-          >
-            ×
-          </button>
-        )}
       </div>
     </header>
   );
@@ -200,44 +198,13 @@ function AddProductCard() {
   );
 }
 
-type FiltersProps = {
-  value: Filter;
-  onChange: (value: Filter) => void;
-  counts: Record<Filter, number>;
-};
-
-function Filters({ value, onChange, counts }: FiltersProps) {
-  return (
-    <div className="no-scrollbar -mx-5 mb-3 flex gap-2 overflow-x-auto px-5 md:-mx-8 md:px-8 lg:-mx-10 lg:px-10">
-      {FILTER_LABELS.map((f) => {
-        const active = value === f.id;
-        const count = counts[f.id];
-        return (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => onChange(f.id)}
-            className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-              active
-                ? "bg-td-ink text-td-bg border-td-ink"
-                : "border-td-line text-td-ink hover:bg-td-bg bg-white"
-            )}
-          >
-            {f.label} · {count}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-type ProductCardProps = {
+function ProductCard({
+  product,
+  onToggle,
+}: {
   product: ProductRow;
   onToggle: () => void;
-};
-
-function ProductCard({ product, onToggle }: ProductCardProps) {
+}) {
   return (
     <div
       className={cn(
@@ -272,46 +239,21 @@ function ProductCard({ product, onToggle }: ProductCardProps) {
         </div>
       </div>
       <div className="relative">
-        <Toggle pressed={product.visible} onToggle={onToggle} />
+        <Toggle
+          pressed={product.visible}
+          onToggle={onToggle}
+          ariaLabel={
+            product.visible
+              ? `Ocultar ${product.name}`
+              : `Mostrar ${product.name}`
+          }
+        />
       </div>
     </div>
   );
 }
 
-type ToggleProps = {
-  pressed: boolean;
-  onToggle: () => void;
-};
-
-function Toggle({ pressed, onToggle }: ToggleProps) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={pressed}
-      aria-label={pressed ? "Ocultar producto" : "Mostrar producto"}
-      onClick={onToggle}
-      className={cn(
-        "relative h-6 w-10 shrink-0 rounded-full transition-colors",
-        pressed ? "bg-td-accent" : "bg-td-line"
-      )}
-    >
-      <span
-        className={cn(
-          "absolute top-0.5 h-5 w-5 rounded-full bg-white transition-[left]",
-          pressed ? "left-[18px]" : "left-0.5"
-        )}
-      />
-    </button>
-  );
-}
-
-type EmptyResultsProps = {
-  query: string;
-  filter: Filter;
-};
-
-function EmptyResults({ query, filter }: EmptyResultsProps) {
+function EmptyResults({ query, filter }: { query: string; filter: Filter }) {
   const message =
     query.trim().length > 0
       ? `Ningún producto coincide con "${query.trim()}"`

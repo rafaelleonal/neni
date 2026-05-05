@@ -7,7 +7,12 @@ const authToken = process.env.TWILIO_AUTH_TOKEN;
 const from = process.env.TWILIO_WHATSAPP_FROM;
 
 if (!accountSid || !authToken || !from) {
-  // Clear messages if the config is missing — better to fail at boot than in runtime.
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_WHATSAPP_FROM son " +
+        "requeridos en producción."
+    );
+  }
   console.warn(
     "[twilio] Faltan TWILIO_ACCOUNT_SID / TWILIO_AUTH_TOKEN / TWILIO_WHATSAPP_FROM. " +
       "El envío de OTP por WhatsApp NO funcionará."

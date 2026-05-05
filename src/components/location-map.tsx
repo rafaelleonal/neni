@@ -45,12 +45,29 @@ type LocationMapProps = {
   zoom?: number;
 };
 
+/**
+ * Defense-in-depth: aunque el endpoint sólo guarda URLs canónicas de Google
+ * Maps, validamos también del lado cliente que cualquier `href` que terminemos
+ * renderizando sea http(s). Bloquea `data:`, `javascript:` (que React 19 ya
+ * sanea), `vbscript:`, `file:`, etc.
+ */
+function isHttpUrl(link: string): boolean {
+  try {
+    return /^https?:$/.test(new URL(link).protocol);
+  } catch {
+    return false;
+  }
+}
+
 export function LocationMap({ link, height = 220, zoom = 16 }: LocationMapProps) {
   const coords = parseLatLng(link);
+  const linkIsSafe = isHttpUrl(link);
 
-  // Si no podemos parsear coords (link arbitrario o referencia textual),
-  // caemos al CTA original "Abrir en Google Maps".
+  // Si no podemos parsear coords (link arbitrario) o el protocolo es inseguro,
+  // caemos al CTA original "Abrir en Google Maps". Si tampoco es http(s),
+  // simplemente no renderizamos nada para no exponer un link peligroso.
   if (!coords) {
+    if (!linkIsSafe) return null;
     return (
       <a
         href={link}

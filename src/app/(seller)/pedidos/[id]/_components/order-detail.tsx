@@ -4,31 +4,21 @@ import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 import { haptic } from "@/lib/haptics";
+import { type OrderDetail } from "@/lib/mocks";
 import {
+  ORDER_STATES,
   ORDER_STATE_FLOW,
-  ORDER_STATE_STYLE,
-  type OrderDetail,
+  isActiveState,
   type OrderState,
-} from "@/lib/mocks";
-import { cn, formatPrice } from "@/lib/utils";
+} from "@/lib/order-states";
+import { buildWhatsappUrl, cn, formatPrice, nameToInitials } from "@/lib/utils";
 
+import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
+import { ConfirmDangerButton } from "@/components/ui/confirm-danger-button";
+import { OrderStateBadge } from "@/components/ui/order-state-badge";
 import { LocationMap } from "@/components/location-map";
 import { ArrowIcon, CheckIcon, WaIcon } from "@/components/neni-icons";
-
-const NEXT_LABEL: Record<OrderState, string | null> = {
-  nuevo: "Marcar como preparando",
-  preparando: "Marcar en camino",
-  camino: "Marcar como entregado",
-  entregado: null,
-  cancelado: null,
-};
-
-type ActiveState = Exclude<OrderState, "cancelado">;
-
-function isActive(state: OrderState): state is ActiveState {
-  return state !== "cancelado";
-}
 
 export function OrderDetailPage({
   order,
@@ -43,18 +33,17 @@ export function OrderDetailPage({
   const [state, setState] = useState<OrderState>(order.state);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const subtotal = order.lines.reduce((sum, l) => sum + l.qty * l.price, 0);
-  const stateStyle = ORDER_STATE_STYLE[state];
-  const nextLabel = NEXT_LABEL[state];
-  const stepIndex = isActive(state) ? ORDER_STATE_FLOW.indexOf(state) : -1;
+  const info = ORDER_STATES[state];
+  const nextLabel = info.sellerNextAction;
+  const stepIndex = isActiveState(state) ? ORDER_STATE_FLOW.indexOf(state) : -1;
   const canCancel = state === "nuevo" || state === "preparando";
 
   async function patchState(next: OrderState) {
     setError(null);
     const previous = state;
-    setState(next); // optimistic
+    setState(next);
     setSubmitting(true);
     const res = await fetch(`/api/orders/${orderId}`, {
       method: "PATCH",
@@ -63,7 +52,7 @@ export function OrderDetailPage({
     });
     setSubmitting(false);
     if (!res.ok) {
-      setState(previous); // revert
+      setState(previous);
       haptic("error");
       setError("No pudimos actualizar el pedido. Intenta de nuevo.");
       return false;
@@ -82,29 +71,14 @@ export function OrderDetailPage({
 
   async function handleCancel() {
     if (submitting) return;
-    if (!confirmCancel) {
-      haptic("light");
-      setConfirmCancel(true);
-      return;
-    }
-    haptic("error");
-    setConfirmCancel(false);
     await patchState("cancelado");
-  }
-
-  function handleBack() {
-    haptic("selection");
-    router.push("/pedidos");
   }
 
   function handleWhatsapp() {
     haptic("light");
     const firstName = order.who.split(/\s+/)[0] ?? order.who;
-    const text = encodeURIComponent(
-      `Hola ${firstName}, soy de ${storeName}. Te escribo sobre tu pedido ${order.id}.`
-    );
-    const phone = order.phone.replace(/\D/g, "");
-    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+    const text = `Hola ${firstName}, soy de ${storeName}. Te escribo sobre tu pedido ${order.id}.`;
+    window.open(buildWhatsappUrl(order.phone, text), "_blank");
   }
 
   return (
@@ -112,25 +86,13 @@ export function OrderDetailPage({
       <div className="mx-auto w-full max-w-3xl px-5 pt-4 pb-40 md:px-8 md:pt-6 lg:px-10 lg:pb-12">
         {/* Header */}
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Atrás"
-            className="text-td-mute -ml-2 grid h-9 w-9 place-items-center rounded-full text-2xl leading-none"
-          >
-            ‹
-          </button>
+          <BackButton href="/pedidos" />
           <div className="flex-1">
             <div className="flex items-center gap-2">
               <h1 className="font-mono text-lg font-semibold lg:text-xl">
                 {order.id}
               </h1>
-              <span
-                className="rounded-full px-2 py-0.5 text-[9.5px] font-bold tracking-[0.4px] uppercase"
-                style={{ background: stateStyle.bg, color: stateStyle.color }}
-              >
-                {stateStyle.label}
-              </span>
+              <OrderStateBadge state={state} />
             </div>
             <div className="text-td-mute mt-0.5 text-xs">{order.time}</div>
           </div>
@@ -146,7 +108,7 @@ export function OrderDetailPage({
           </div>
           <div className="mt-2 flex items-start gap-3">
             <div className="bg-td-line text-td-ink grid h-11 w-11 shrink-0 place-items-center rounded-full text-sm font-semibold">
-              {initials(order.who)}
+              {nameToInitials(order.who)}
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-base font-semibold">{order.who}</div>
@@ -235,21 +197,11 @@ export function OrderDetailPage({
         {/* Cancelar (sólo nuevo / preparando) */}
         {canCancel && (
           <section className="mt-6">
-            <button
-              type="button"
-              onClick={handleCancel}
+            <ConfirmDangerButton
+              label="Cancelar pedido"
+              onConfirm={handleCancel}
               disabled={submitting}
-              className={cn(
-                "w-full rounded-2xl border-2 px-4 py-3.5 text-sm font-semibold transition-colors disabled:opacity-60",
-                confirmCancel
-                  ? "border-[#9C3F12] bg-[#FCE4D6] text-[#9C3F12]"
-                  : "border-td-line text-td-mute hover:border-[#9C3F12] hover:text-[#9C3F12]"
-              )}
-            >
-              {confirmCancel
-                ? "Toca de nuevo para confirmar"
-                : "Cancelar pedido"}
-            </button>
+            />
           </section>
         )}
       </div>
@@ -307,12 +259,12 @@ function Row({
 }
 
 function Stepper({ state }: { state: OrderState }) {
-  const currentIndex = isActive(state) ? ORDER_STATE_FLOW.indexOf(state) : -1;
+  const currentIndex = isActiveState(state) ? ORDER_STATE_FLOW.indexOf(state) : -1;
   return (
     <div className="mt-5 flex items-center gap-1">
       {ORDER_STATE_FLOW.map((s, i) => {
         const reached = i <= currentIndex;
-        const style = ORDER_STATE_STYLE[s];
+        const info = ORDER_STATES[s];
         return (
           <div key={s} className="flex flex-1 items-center gap-1">
             <div
@@ -320,7 +272,7 @@ function Stepper({ state }: { state: OrderState }) {
                 "h-1.5 flex-1 rounded-full transition-colors",
                 reached ? "" : "bg-td-line"
               )}
-              style={reached ? { background: style.bg } : undefined}
+              style={reached ? { background: info.bg } : undefined}
             />
             <span
               className={cn(
@@ -328,19 +280,11 @@ function Stepper({ state }: { state: OrderState }) {
                 reached ? "text-td-ink" : "text-td-mute"
               )}
             >
-              {style.label}
+              {info.label}
             </span>
           </div>
         );
       })}
     </div>
   );
-}
-
-function initials(name: string): string {
-  const parts = name.replace(/\./g, "").trim().split(/\s+/);
-  return parts
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase() ?? "")
-    .join("");
 }

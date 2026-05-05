@@ -8,6 +8,7 @@ import { authClient } from "@/lib/auth-client";
 import { haptic } from "@/lib/haptics";
 import { formatPhone } from "@/lib/utils";
 
+import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { ArrowIcon, WaIcon } from "@/components/neni-icons";
 import { NeniLogo } from "@/components/neni-logo";
@@ -48,23 +49,11 @@ export default function AccesoPage() {
     router.push(`/acceso/codigo?to=${encodeURIComponent(phone)}`);
   }
 
-  function handleBack() {
-    haptic("selection");
-    router.back();
-  }
-
   return (
     <main className="bg-td-bg flex min-h-dvh flex-col lg:items-center lg:justify-center">
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col lg:flex-none lg:py-10">
         <div className="flex items-center px-5 pt-4 md:px-6">
-          <button
-            type="button"
-            onClick={handleBack}
-            aria-label="Atrás"
-            className="text-td-mute -ml-2 grid h-9 w-9 place-items-center rounded-full text-2xl leading-none"
-          >
-            ‹
-          </button>
+          <BackButton onClick={() => router.back()} />
         </div>
 
         <div className="flex flex-1 flex-col px-5 pt-8 pb-32 md:px-6 md:pt-10 lg:flex-none lg:pb-6">

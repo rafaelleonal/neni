@@ -2,10 +2,14 @@ import Link from "next/link";
 import { and, eq, gte, sql } from "drizzle-orm";
 
 import { db, orders, products } from "@/db";
-import { ORDER_STATE_STYLE, type OrderState } from "@/lib/mocks";
-import { getCurrentStore, nameToInitials } from "@/lib/seller";
-import { formatPrice } from "@/lib/utils";
+import {
+  formatOrderNumber,
+  type OrderState,
+} from "@/lib/order-states";
+import { getCurrentStore } from "@/lib/seller";
+import { firstWord, formatPrice, nameToInitials } from "@/lib/utils";
 
+import { OrderStateBadge } from "@/components/ui/order-state-badge";
 import { BellIcon } from "@/components/neni-icons";
 
 const RECENT_LIMIT = 4;
@@ -72,12 +76,12 @@ export default async function DashboardPage() {
 
 function Header({ storeName }: { storeName: string }) {
   const initials = nameToInitials(storeName);
-  const firstWord = storeName.split(/\s+/)[0] ?? storeName;
+  const greeting = firstWord(storeName);
   return (
     <header className="mb-6 flex items-center gap-3">
       <div>
         <div className="text-td-mute text-xs">Hola,</div>
-        <div className="text-lg font-semibold lg:text-xl">{firstWord} 👋</div>
+        <div className="text-lg font-semibold lg:text-xl">{greeting} 👋</div>
       </div>
       <div className="ml-auto flex gap-2">
         <button
@@ -250,8 +254,7 @@ function RecentOrders({
       </div>
       <div className="flex flex-col gap-2">
         {rows.map((order) => {
-          const style = ORDER_STATE_STYLE[order.state];
-          const num = order.number.toString().padStart(4, "0");
+          const num = formatOrderNumber(order.number, false);
           return (
             <Link
               key={order.id}
@@ -268,14 +271,8 @@ function RecentOrders({
                 <div className="font-mono text-sm font-semibold">
                   {formatPrice(Number(order.total))}
                 </div>
-                <div
-                  className="mt-0.5 inline-block rounded-full px-2 py-0.5 text-[9.5px] font-bold tracking-[0.4px] uppercase"
-                  style={{
-                    background: style.bg,
-                    color: style.color,
-                  }}
-                >
-                  {style.label}
+                <div className="mt-0.5">
+                  <OrderStateBadge state={order.state} />
                 </div>
               </div>
             </Link>

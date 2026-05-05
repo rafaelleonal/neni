@@ -1,9 +1,15 @@
 import Link from "next/link";
 import { HapticOnMount } from "@/lib/haptics";
-import { type OrderState } from "@/lib/mocks";
+import {
+  ORDER_STATES,
+  ORDER_STATE_FLOW,
+  formatOrderNumber,
+  type OrderState,
+} from "@/lib/order-states";
 import { type Storefront } from "@/lib/storefront";
 import { cn, formatPrice } from "@/lib/utils";
 
+import { BackButton } from "@/components/ui/back-button";
 import { CheckIcon } from "@/components/neni-icons";
 
 export type TrackingOrder = {
@@ -30,36 +36,16 @@ type OrderTrackingPageProps = {
   order: TrackingOrder;
 };
 
-const STATE_TITLES: Record<OrderState, string> = {
-  nuevo: "Pedido recibido",
-  preparando: "Preparando tu pedido",
-  camino: "Va en camino",
-  entregado: "Entregado",
-  cancelado: "Pedido cancelado",
-};
-
-const STATE_SUBS: Record<OrderState, string> = {
-  nuevo: "La tienda lo está revisando",
-  preparando: "La tienda lo está preparando para ti",
-  camino: "Tu pedido salió y llegará pronto",
-  entregado: "¡Gracias por tu compra!",
-  cancelado: "El pedido fue cancelado",
-};
-
-const TIMELINE_STEPS: Array<{ state: OrderState; title: string; sub: string }> =
-  [
-    { state: "nuevo", title: "Pedido recibido", sub: "La tienda lo confirmó" },
-    {
-      state: "preparando",
-      title: "Preparando",
-      sub: "La nena ya lo está armando",
-    },
-    { state: "camino", title: "En camino", sub: "Va para tu dirección" },
-    { state: "entregado", title: "Entregado", sub: "Listo, ¡que lo disfrutes!" },
-  ];
+function isHttpUrl(link: string): boolean {
+  try {
+    return /^https?:$/.test(new URL(link).protocol);
+  } catch {
+    return false;
+  }
+}
 
 export function OrderTrackingPage({ store, order }: OrderTrackingPageProps) {
-  const orderLabel = `#${order.number.toString().padStart(4, "0")}`;
+  const orderLabel = formatOrderNumber(order.number);
 
   return (
     <main className="bg-td-bg min-h-dvh">
@@ -93,13 +79,7 @@ function Header({
   return (
     <header className="border-b-td-line border-b">
       <div className="mx-auto flex max-w-md items-center gap-3 px-5 pt-5 pb-4 md:max-w-3xl md:px-8 lg:max-w-5xl lg:px-10">
-        <Link
-          href={`/${store.slug}`}
-          aria-label={`Regresar a ${store.name}`}
-          className="text-td-mute hover:text-td-ink -ml-2 grid h-9 w-9 place-items-center rounded-full text-2xl leading-none"
-        >
-          ‹
-        </Link>
+        <BackButton href={`/${store.slug}`} ariaLabel={`Regresar a ${store.name}`} />
         <div className="flex-1 text-base font-semibold lg:text-lg">
           Pedido {orderLabel}
         </div>
@@ -110,16 +90,17 @@ function Header({
 }
 
 function Status({ order }: { order: TrackingOrder }) {
+  const info = ORDER_STATES[order.state];
   return (
     <div>
       <div className="text-td-mute text-xs tracking-[1.3px] uppercase">
         Tu pedido
       </div>
       <h1 className="mt-1 text-[26px] font-semibold tracking-[-0.8px] md:text-3xl">
-        {STATE_TITLES[order.state]}
+        {info.buyerTitle}
       </h1>
       <div className="text-td-mute mt-1 text-[13.5px] md:text-sm">
-        {STATE_SUBS[order.state]}
+        {info.buyerSub}
       </div>
     </div>
   );
@@ -173,7 +154,6 @@ function NoteCard({ text }: { text: string }) {
 }
 
 function Timeline({ state }: { state: OrderState }) {
-  // Si el pedido fue cancelado, mostramos un solo bloque rojo.
   if (state === "cancelado") {
     return (
       <div className="rounded-2xl border border-[#9C3F12] bg-[#FCE4D6] px-4 py-3 text-sm font-medium text-[#9C3F12]">
@@ -182,16 +162,17 @@ function Timeline({ state }: { state: OrderState }) {
     );
   }
 
-  const currentIndex = TIMELINE_STEPS.findIndex((s) => s.state === state);
+  const currentIndex = ORDER_STATE_FLOW.indexOf(state);
   return (
     <div className="border-td-line rounded-2xl border bg-white px-4 py-2">
-      {TIMELINE_STEPS.map((step, i) => {
-        const last = i === TIMELINE_STEPS.length - 1;
+      {ORDER_STATE_FLOW.map((s, i) => {
+        const last = i === ORDER_STATE_FLOW.length - 1;
         const done = i <= currentIndex;
         const active = i === currentIndex;
+        const info = ORDER_STATES[s];
         return (
           <div
-            key={step.state}
+            key={s}
             className={cn(
               "flex items-start gap-3 py-3",
               !last && "border-b-td-line border-b"
@@ -214,9 +195,11 @@ function Timeline({ state }: { state: OrderState }) {
                   done ? "text-td-ink" : "text-td-mute font-medium"
                 )}
               >
-                {step.title}
+                {info.timelineTitle}
               </div>
-              <div className="text-td-mute mt-0.5 text-xs">{step.sub}</div>
+              <div className="text-td-mute mt-0.5 text-xs">
+                {info.timelineSub}
+              </div>
             </div>
           </div>
         );
@@ -235,7 +218,7 @@ function DetailsCard({ order }: { order: TrackingOrder }) {
       </div>
       <Detail label="Cliente" value={order.customerName} />
       {order.address && <Detail label="Entrega" value={order.address} />}
-      {order.locationLink && (
+      {order.locationLink && isHttpUrl(order.locationLink) && (
         <DetailLink
           label="Ubicación"
           href={order.locationLink}

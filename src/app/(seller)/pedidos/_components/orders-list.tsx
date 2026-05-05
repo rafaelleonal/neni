@@ -3,10 +3,16 @@
 import { useMemo, useState } from "react";
 
 import Link from "next/link";
-import { ORDER_STATE_STYLE, type OrderState } from "@/lib/mocks";
-import { cn, formatPrice } from "@/lib/utils";
+import {
+  ORDER_STATES,
+  formatOrderNumber,
+  type OrderState,
+} from "@/lib/order-states";
+import { cn, formatPrice, formatRelativeTime } from "@/lib/utils";
 
-import { SearchIcon } from "@/components/neni-icons";
+import { FilterChip, FilterChipRow } from "@/components/ui/filter-chip";
+import { OrderStateBadge } from "@/components/ui/order-state-badge";
+import { SearchInput } from "@/components/ui/search-input";
 
 export type OrderSummary = {
   id: string;
@@ -19,13 +25,7 @@ export type OrderSummary = {
   createdAt: string;
 };
 
-type Filter =
-  | "todos"
-  | "nuevo"
-  | "preparando"
-  | "camino"
-  | "entregado"
-  | "cancelado";
+type Filter = "todos" | OrderState;
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: "todos", label: "Todos" },
@@ -58,7 +58,7 @@ export function OrdersList({ initial }: { initial: OrderSummary[] }) {
       .filter((o) => {
         if (query.trim().length === 0) return true;
         const q = query.trim().toLowerCase();
-        const num = o.number.toString().padStart(4, "0");
+        const num = formatOrderNumber(o.number, false);
         return o.customerName.toLowerCase().includes(q) || num.includes(q);
       });
   }, [initial, filter, query]);
@@ -66,7 +66,17 @@ export function OrdersList({ initial }: { initial: OrderSummary[] }) {
   return (
     <div className="mx-auto w-full max-w-5xl px-5 pt-6 pb-8 md:px-8 md:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
       <Header total={counts.todos} query={query} onQueryChange={setQuery} />
-      <Filters value={filter} onChange={setFilter} counts={counts} />
+      <FilterChipRow wrap>
+        {FILTERS.map((f) => (
+          <FilterChip
+            key={f.id}
+            active={filter === f.id}
+            label={f.label}
+            count={counts[f.id]}
+            onClick={() => setFilter(f.id)}
+          />
+        ))}
+      </FilterChipRow>
       {filtered.length === 0 ? (
         <EmptyResults filter={filter} query={query} />
       ) : (
@@ -96,65 +106,20 @@ function Header({
         {total} {total === 1 ? "pedido" : "pedidos"} en total
       </div>
 
-      <div className="border-td-line mt-4 flex items-center gap-2 rounded-xl border bg-white px-3 py-2.5">
-        <SearchIcon size={16} stroke="var(--td-mute)" />
-        <input
+      <div className="mt-4">
+        <SearchInput
           value={query}
-          onChange={(e) => onQueryChange(e.target.value)}
+          onChange={onQueryChange}
           placeholder="Buscar por cliente o número"
-          className="text-td-ink placeholder:text-td-mute flex-1 bg-transparent text-sm outline-none"
         />
-        {query && (
-          <button
-            type="button"
-            onClick={() => onQueryChange("")}
-            aria-label="Limpiar búsqueda"
-            className="text-td-mute hover:text-td-ink text-lg leading-none"
-          >
-            ×
-          </button>
-        )}
       </div>
     </header>
   );
 }
 
-function Filters({
-  value,
-  onChange,
-  counts,
-}: {
-  value: Filter;
-  onChange: (v: Filter) => void;
-  counts: Record<Filter, number>;
-}) {
-  return (
-    <div className="no-scrollbar -mx-5 mb-3 flex gap-2 overflow-x-auto px-5 md:-mx-8 md:px-8 lg:-mx-10 lg:flex-wrap lg:overflow-visible lg:px-10">
-      {FILTERS.map((f) => {
-        const active = value === f.id;
-        return (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => onChange(f.id)}
-            className={cn(
-              "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
-              active
-                ? "bg-td-ink text-td-bg border-td-ink"
-                : "border-td-line text-td-ink hover:bg-td-bg bg-white"
-            )}
-          >
-            {f.label} · {counts[f.id]}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 function OrderRow({ order }: { order: OrderSummary }) {
-  const style = ORDER_STATE_STYLE[order.state];
-  const num = order.number.toString().padStart(4, "0");
+  const info = ORDER_STATES[order.state];
+  const num = formatOrderNumber(order.number, false);
   const isNew = order.state === "nuevo";
 
   return (
@@ -165,14 +130,12 @@ function OrderRow({ order }: { order: OrderSummary }) {
         isNew ? "border-td-ink/15" : "border-td-line"
       )}
     >
-      {/* Stripe lateral con color del estado */}
       <span
         aria-hidden
         className="absolute top-0 bottom-0 left-0 w-1"
-        style={{ background: style.bg }}
+        style={{ background: info.bg }}
       />
 
-      {/* Número con dot de notificación si está nuevo */}
       <div className="relative shrink-0">
         <div className="bg-td-bg text-td-ink grid h-12 w-12 place-items-center rounded-xl font-mono text-[13px] font-semibold tracking-[-0.5px]">
           {num}
@@ -184,18 +147,12 @@ function OrderRow({ order }: { order: OrderSummary }) {
         )}
       </div>
 
-      {/* Cliente + meta */}
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="truncate text-[15px] font-semibold">
             {order.customerName}
           </span>
-          <span
-            className="shrink-0 rounded-full px-2 py-0.5 text-[9.5px] font-bold tracking-[0.4px] uppercase"
-            style={{ background: style.bg, color: style.color }}
-          >
-            {style.label}
-          </span>
+          <OrderStateBadge state={order.state} />
         </div>
         <div className="text-td-mute mt-1 truncate text-xs">
           <span>
@@ -209,7 +166,6 @@ function OrderRow({ order }: { order: OrderSummary }) {
         </div>
       </div>
 
-      {/* Total prominente */}
       <div className="text-right">
         <div className="font-mono text-base font-semibold tracking-[-0.3px]">
           {formatPrice(Number(order.total))}
@@ -234,19 +190,4 @@ function EmptyResults({ filter, query }: { filter: Filter; query: string }) {
       {message}
     </div>
   );
-}
-
-function formatRelativeTime(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diff / 60_000);
-  if (minutes < 1) return "Hace un momento";
-  if (minutes < 60) return `Hace ${minutes} min`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `Hace ${hours} h`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `Hace ${days} d`;
-  return new Date(iso).toLocaleDateString("es-MX", {
-    day: "numeric",
-    month: "short",
-  });
 }
