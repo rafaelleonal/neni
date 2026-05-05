@@ -287,12 +287,21 @@ function Featured({
     <div className="px-5 pt-1 pb-3 lg:px-0">
       <div className="border-td-line grid min-h-[140px] grid-cols-[1.1fr_1fr] overflow-hidden rounded-[16px] border bg-white md:min-h-[200px] md:grid-cols-[1fr_1.4fr]">
         <div className="relative">
-          <ProductPlaceholder
-            h={140}
-            label={product.name.toLowerCase()}
-            tone={product.tone}
-            className="h-full"
-          />
+          {product.photoUrl ? (
+            <img
+              src={product.photoUrl}
+              alt={product.name}
+              className="absolute inset-0 h-full w-full object-cover"
+              loading="lazy"
+            />
+          ) : (
+            <ProductPlaceholder
+              h={140}
+              label={product.name.toLowerCase()}
+              tone={product.tone}
+              className="h-full"
+            />
+          )}
         </div>
         <div className="flex flex-col p-3.5 md:p-5">
           <div className="text-[15px] font-semibold tracking-[-0.3px] md:text-lg">
@@ -373,12 +382,21 @@ function ProductCard({
 }) {
   return (
     <div className="border-td-line overflow-hidden rounded-[14px] border bg-white">
-      <div className="relative">
-        <ProductPlaceholder
-          h={120}
-          label={product.name.toLowerCase()}
-          tone={product.tone}
-        />
+      <div className="relative h-[120px]">
+        {product.photoUrl ? (
+          <img
+            src={product.photoUrl}
+            alt={product.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <ProductPlaceholder
+            h={120}
+            label={product.name.toLowerCase()}
+            tone={product.tone}
+          />
+        )}
         <button
           type="button"
           onClick={onAdd}

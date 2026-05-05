@@ -5,11 +5,27 @@ import { z } from "zod";
 import { db, products } from "@/db";
 import { getCurrentStore } from "@/lib/seller";
 
+const blobUrl = z
+  .string()
+  .url()
+  .max(500)
+  .refine((u) => {
+    try {
+      const url = new URL(u);
+      return (
+        url.protocol === "https:" && url.host.endsWith(".public.blob.vercel-storage.com")
+      );
+    } catch {
+      return false;
+    }
+  }, "URL de foto inválida");
+
 const patchBody = z.object({
   name: z.string().min(1).max(60).optional(),
   price: z.number().positive().optional(),
   description: z.string().max(240).nullable().optional(),
   category: z.string().max(40).nullable().optional(),
+  photoUrl: blobUrl.nullable().optional(),
   stock: z.enum(["Disponible", "Agotado"]).optional(),
   visible: z.boolean().optional(),
 });
@@ -38,6 +54,8 @@ export async function PATCH(
     updates.description = parsed.data.description;
   if (parsed.data.category !== undefined)
     updates.category = parsed.data.category?.trim() || null;
+  if (parsed.data.photoUrl !== undefined)
+    updates.photoUrl = parsed.data.photoUrl;
   if (parsed.data.stock !== undefined) updates.stock = parsed.data.stock;
   if (parsed.data.visible !== undefined) updates.visible = parsed.data.visible;
 

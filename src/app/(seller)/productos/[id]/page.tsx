@@ -57,6 +57,7 @@ export default async function ProductoEditorPage({
         price: Number(product.price),
         description: product.description ?? "",
         category: product.category ?? "",
+        photoUrl: product.photoUrl,
         stock: product.stock,
         visible: product.visible,
         tone: toneFromId(product.id),

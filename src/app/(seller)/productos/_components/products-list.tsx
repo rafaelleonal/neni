@@ -23,6 +23,7 @@ export type ProductRow = {
   stock: "Disponible" | "Agotado";
   visible: boolean;
   tone: ProductTone;
+  photoUrl: string | null;
 };
 
 type Filter = "todos" | "disponibles" | "agotados" | "ocultos";
@@ -217,8 +218,17 @@ function ProductCard({
         aria-label={`Editar ${product.name}`}
         className="absolute inset-0 rounded-2xl"
       />
-      <div className="pointer-events-none h-14 w-14 shrink-0">
-        <ProductPlaceholder h={56} label="" tone={product.tone} />
+      <div className="pointer-events-none h-14 w-14 shrink-0 overflow-hidden rounded-[10px]">
+        {product.photoUrl ? (
+          <img
+            src={product.photoUrl}
+            alt=""
+            className="h-full w-full object-cover"
+            loading="lazy"
+          />
+        ) : (
+          <ProductPlaceholder h={56} label="" tone={product.tone} />
+        )}
       </div>
       <div className="pointer-events-none relative min-w-0 flex-1">
         <div className="truncate text-sm font-semibold">{product.name}</div>

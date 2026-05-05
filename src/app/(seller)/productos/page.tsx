@@ -26,6 +26,7 @@ export default async function ProductosPage() {
     stock: p.stock,
     visible: p.visible,
     tone: toneFromId(p.id),
+    photoUrl: p.photoUrl,
   }));
 
   if (initial.length === 0) {

@@ -12,8 +12,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { ConfirmDangerButton } from "@/components/ui/confirm-danger-button";
 import { FilterChip } from "@/components/ui/filter-chip";
 import { SubmitBar } from "@/components/ui/submit-bar";
-import { PlusIcon } from "@/components/neni-icons";
-import { ProductPlaceholder } from "@/components/product-placeholder";
+import { PhotoUpload } from "@/components/photo-upload";
 
 export type EditorProduct = {
   id: string;
@@ -21,6 +20,7 @@ export type EditorProduct = {
   price: number;
   description: string;
   category: string;
+  photoUrl: string | null;
   stock: Stock;
   visible: boolean;
   tone: ProductTone;
@@ -54,6 +54,9 @@ export function ProductEditor(props: ProductEditorProps) {
     isEdit ? props.product.stock : "Disponible"
   );
   const [visible, setVisible] = useState(isEdit ? props.product.visible : true);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(
+    isEdit ? props.product.photoUrl : null
+  );
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,6 +74,7 @@ export function ProductEditor(props: ProductEditorProps) {
       price,
       description: desc.trim() || null,
       category: category.trim() || null,
+      photoUrl,
       stock,
       visible,
     };
@@ -130,22 +134,7 @@ export function ProductEditor(props: ProductEditorProps) {
           <span className="text-td-mute mb-2 block text-xs font-semibold tracking-[0.4px] uppercase">
             Foto
           </span>
-          <button
-            type="button"
-            onClick={() => haptic("light")}
-            className="border-td-line hover:border-td-mute relative grid aspect-[4/3] w-full place-items-center overflow-hidden rounded-2xl border-2 border-dashed bg-white transition-colors"
-          >
-            <div className="absolute inset-0">
-              <ProductPlaceholder h="100%" label="" tone={tone} />
-            </div>
-            <div className="bg-td-ink/85 text-td-bg relative flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold">
-              <PlusIcon size={14} stroke="var(--td-bg)" />
-              {isEdit ? "Cambiar foto" : "Agregar foto"}
-            </div>
-          </button>
-          <p className="text-td-mute mt-2 text-xs">
-            JPG o PNG, máx 5 MB. Cuadrada se ve mejor.
-          </p>
+          <PhotoUpload value={photoUrl} onChange={setPhotoUrl} tone={tone} />
         </section>
 
         {/* Nombre */}

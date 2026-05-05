@@ -1,14 +1,30 @@
 import { NextResponse } from "next/server";
+import { getCurrentStore } from "@/lib/seller";
+import { db, products } from "@/db";
 import { z } from "zod";
 
-import { db, products } from "@/db";
-import { getCurrentStore } from "@/lib/seller";
+const blobUrl = z
+  .string()
+  .url()
+  .max(500)
+  .refine((u) => {
+    try {
+      const url = new URL(u);
+      return (
+        url.protocol === "https:" &&
+        url.host.endsWith(".public.blob.vercel-storage.com")
+      );
+    } catch {
+      return false;
+    }
+  }, "URL de foto inválida");
 
 const bodySchema = z.object({
   name: z.string().min(1).max(60),
   price: z.number().positive(),
   description: z.string().max(240).optional().nullable(),
   category: z.string().max(40).optional().nullable(),
+  photoUrl: blobUrl.optional().nullable(),
   stock: z.enum(["Disponible", "Agotado"]).optional(),
   visible: z.boolean().optional(),
 });
@@ -35,6 +51,7 @@ export async function POST(req: Request) {
       price: parsed.data.price.toFixed(2),
       description: parsed.data.description ?? null,
       category: parsed.data.category?.trim() || null,
+      photoUrl: parsed.data.photoUrl ?? null,
       stock: parsed.data.stock ?? "Disponible",
       visible: parsed.data.visible ?? true,
     })

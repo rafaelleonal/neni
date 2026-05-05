@@ -1,10 +1,10 @@
 import "server-only";
 
-import { and, asc, eq } from "drizzle-orm";
-
-import { db, products, stores } from "@/db";
 import { toneFromId } from "@/lib/product-tone";
 import { nameToInitials } from "@/lib/seller";
+import { db, products, stores } from "@/db";
+import { and, asc, eq } from "drizzle-orm";
+
 import type { ProductTone } from "@/components/product-placeholder";
 
 export type StorefrontProduct = {
@@ -14,6 +14,7 @@ export type StorefrontProduct = {
   desc: string;
   tone: ProductTone;
   category: string;
+  photoUrl: string | null;
 };
 
 export type StorePromo = {
@@ -26,9 +27,9 @@ export type StorePromo = {
 export type PaymentId = "card" | "oxxo" | "spei" | "cash";
 
 /**
- * Shape consumido por la UI pública. Los campos opcionales todavía no viven en
- * DB (rating, envío, promo, etc.); la UI los maneja con fallbacks y se irán
- * llenando conforme agreguemos features.
+ * Shape consumed by the public UI. The optional fields still don't live in
+ * DB (rating, shipping, promo, etc.); the UI handles them with fallbacks and
+ * will be filled as we add features.
  */
 export type Storefront = {
   slug: string;
@@ -39,7 +40,7 @@ export type Storefront = {
   categories: string[];
   payments: PaymentId[];
   products: StorefrontProduct[];
-  // Opcionales — todavía sin persistencia.
+  // Optional — still without persistence.
   location?: string;
   rating?: number;
   reviews?: number;
@@ -59,10 +60,6 @@ function sanitizePayments(raw: string[]): PaymentId[] {
 
 const ALL_CATEGORY = "Todos";
 
-/**
- * Lee la tienda pública por slug. Sólo incluye productos visibles. Devuelve
- * `null` si la tienda no existe.
- */
 export async function getPublicStorefront(
   slug: string
 ): Promise<Storefront | null> {
@@ -76,7 +73,7 @@ export async function getPublicStorefront(
     orderBy: [asc(products.sortOrder), asc(products.createdAt)],
   });
 
-  // Solo incluimos categorías que tengan al menos un producto visible.
+  // Only include categories that have at least one visible product.
   const usedCategories = new Set<string>();
   for (const p of rows) {
     if (p.category && store.categories.includes(p.category)) {
@@ -102,11 +99,12 @@ export async function getPublicStorefront(
       desc: p.description ?? "",
       tone: toneFromId(p.id),
       category: p.category ?? ALL_CATEGORY,
+      photoUrl: p.photoUrl,
     })),
   };
 }
 
-/** Lista de slugs públicos. Útil para `generateStaticParams` o sitemaps. */
+/** Public slugs list. Useful for `generateStaticParams` or sitemaps. */
 export async function listPublicSlugs(): Promise<string[]> {
   const rows = await db.select({ slug: stores.slug }).from(stores);
   return rows.map((r) => r.slug);
