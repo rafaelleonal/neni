@@ -64,12 +64,24 @@ const PAYMENT_BADGES: Record<PaymentMethod["id"], string> = {
 export function CheckoutPage({ store }: { store: Storefront }) {
   const router = useRouter();
   const cart = useCart(store.slug);
-  const [payment, setPayment] = useState<PaymentMethod["id"]>("cash");
+
+  // Sólo mostramos métodos que la tienda tiene activados.
+  const availableMethods = useMemo(
+    () => PAYMENT_METHODS.filter((m) => store.payments.includes(m.id)),
+    [store.payments]
+  );
+  const defaultPayment = availableMethods[0]?.id ?? "cash";
+
+  const [payment, setPayment] = useState<PaymentMethod["id"]>(defaultPayment);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [phoneRaw, setPhoneRaw] = useState("");
   const [addressLine, setAddressLine] = useState("");
+  const [locationLink, setLocationLink] = useState("");
+  const [locationStatus, setLocationStatus] = useState<
+    "idle" | "loading" | "ok" | "error"
+  >("idle");
   const [notes, setNotes] = useState("");
 
   const phoneDigits = phoneRaw.replace(/\D/g, "").slice(0, 10);
@@ -108,6 +120,7 @@ export function CheckoutPage({ store }: { store: Storefront }) {
         customerName: name.trim(),
         customerPhone: `+521${phoneDigits}`,
         address: addressLine.trim(),
+        locationLink: locationLink.trim() || null,
         notes: notes.trim() || null,
         payment,
         items: lineItems.map((item) => ({
@@ -125,6 +138,29 @@ export function CheckoutPage({ store }: { store: Storefront }) {
     const json = (await res.json()) as { ok: true; orderId: string };
     cart.clear();
     router.push(`/${store.slug}/pedido/${json.orderId}`);
+  }
+
+  function handleShareLocation() {
+    if (!("geolocation" in navigator)) {
+      setLocationStatus("error");
+      return;
+    }
+    haptic("selection");
+    setLocationStatus("loading");
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const link = `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`;
+        setLocationLink(link);
+        setLocationStatus("ok");
+        haptic("success");
+      },
+      () => {
+        setLocationStatus("error");
+        haptic("error");
+      },
+      { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 }
+    );
   }
 
   function handleQty(productId: string, nextQty: number) {
@@ -241,6 +277,15 @@ export function CheckoutPage({ store }: { store: Storefront }) {
                   className="border-td-line focus:border-td-ink w-full resize-none rounded-xl border bg-white px-3 py-2.5 text-sm leading-snug transition-colors outline-none"
                 />
               </Field>
+              <LocationField
+                value={locationLink}
+                onChange={(v) => {
+                  setLocationLink(v);
+                  setLocationStatus(v ? "ok" : "idle");
+                }}
+                status={locationStatus}
+                onShare={handleShareLocation}
+              />
               <Field label="Notas (opcional)">
                 <textarea
                   value={notes}
@@ -260,7 +305,7 @@ export function CheckoutPage({ store }: { store: Storefront }) {
           className="lg:sticky lg:top-6 lg:self-start"
         >
           <div className="flex flex-col gap-2">
-            {PAYMENT_METHODS.map((method) => (
+            {availableMethods.map((method) => (
               <PayMethodRow
                 key={method.id}
                 method={method}
@@ -268,6 +313,11 @@ export function CheckoutPage({ store }: { store: Storefront }) {
                 onSelect={() => handlePayment(method.id)}
               />
             ))}
+            {availableMethods.length === 1 && (
+              <p className="text-td-mute mt-1 px-1 text-[11px]">
+                Esta tienda sólo acepta este método por ahora.
+              </p>
+            )}
           </div>
         </Section>
       </div>
@@ -298,6 +348,61 @@ function Field({
       </span>
       {children}
     </label>
+  );
+}
+
+function LocationField({
+  value,
+  onChange,
+  status,
+  onShare,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  status: "idle" | "loading" | "ok" | "error";
+  onShare: () => void;
+}) {
+  return (
+    <div className="block">
+      <span className="text-td-mute mb-1 block text-[11px] font-semibold tracking-[0.4px] uppercase">
+        Ubicación (opcional)
+      </span>
+      <div className="flex flex-col gap-2">
+        <input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="Pega un link de Google Maps o usa el botón"
+          inputMode="url"
+          className="border-td-line focus:border-td-ink w-full rounded-xl border bg-white px-3 py-2.5 text-sm transition-colors outline-none"
+        />
+        <button
+          type="button"
+          onClick={onShare}
+          disabled={status === "loading"}
+          className={cn(
+            "flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2 text-sm font-medium transition-colors",
+            status === "ok"
+              ? "border-td-accent bg-td-accent/10 text-td-ink"
+              : status === "error"
+                ? "border-[#9C3F12] bg-[#FCE4D6] text-[#9C3F12]"
+                : "border-td-line text-td-ink hover:bg-td-bg bg-white"
+          )}
+        >
+          <span aria-hidden>📍</span>
+          {status === "loading"
+            ? "Obteniendo ubicación…"
+            : status === "ok"
+              ? "Ubicación compartida"
+              : status === "error"
+                ? "No pudimos obtener la ubicación"
+                : "Compartir mi ubicación"}
+        </button>
+        <p className="text-td-mute text-[11px] leading-snug">
+          Ayuda a la tienda a encontrarte más rápido. Puedes usar el botón o
+          pegar un link de Google Maps.
+        </p>
+      </div>
+    </div>
   );
 }
 

@@ -14,6 +14,7 @@ export type TrackingOrder = {
   customerName: string;
   notes: string | null;
   address: string | null;
+  locationLink: string | null;
   payment: string;
   createdAt: string;
   items: Array<{
@@ -234,6 +235,13 @@ function DetailsCard({ order }: { order: TrackingOrder }) {
       </div>
       <Detail label="Cliente" value={order.customerName} />
       {order.address && <Detail label="Entrega" value={order.address} />}
+      {order.locationLink && (
+        <DetailLink
+          label="Ubicación"
+          href={order.locationLink}
+          value="Abrir en mapa"
+        />
+      )}
       <Detail label="Pago" value={order.payment} last />
     </div>
   );
@@ -257,6 +265,37 @@ function Detail({
     >
       <div className="text-td-mute w-20 shrink-0 text-xs">{label}</div>
       <div className="text-td-ink flex-1 text-sm font-medium">{value}</div>
+    </div>
+  );
+}
+
+function DetailLink({
+  label,
+  value,
+  href,
+  last,
+}: {
+  label: string;
+  value: string;
+  href: string;
+  last?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-start gap-3 px-4 py-3",
+        !last && "border-b-td-line border-b"
+      )}
+    >
+      <div className="text-td-mute w-20 shrink-0 text-xs">{label}</div>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-td-ink flex-1 text-sm font-medium underline-offset-4 hover:underline"
+      >
+        {value} ↗
+      </a>
     </div>
   );
 }

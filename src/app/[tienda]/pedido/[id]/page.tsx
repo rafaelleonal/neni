@@ -56,6 +56,7 @@ export default async function OrderPage({
         customerName: order.customerName,
         notes: order.notes,
         address: order.address,
+        locationLink: order.locationLink,
         payment: order.payment,
         createdAt: order.createdAt.toISOString(),
         items: items.map((it) => ({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,18 +16,66 @@ import {
   WaIcon,
 } from "@/components/neni-icons";
 
+type PaymentId = "card" | "oxxo" | "spei" | "cash";
+
 type StoreInitial = {
   name: string;
   slug: string;
   description: string;
   isOpen: boolean;
+  categories: string[];
+  payments: string[];
 };
+
+const PAYMENT_METHODS: ReadonlyArray<{
+  id: PaymentId;
+  label: string;
+  sub: string;
+  badge: string;
+  color: string;
+  available: boolean;
+}> = [
+  {
+    id: "cash",
+    label: "Efectivo contra entrega",
+    sub: "Cobras al entregar el pedido",
+    badge: "$$",
+    color: "#1FAA59",
+    available: true,
+  },
+  {
+    id: "card",
+    label: "Tarjeta",
+    sub: "Visa, Mastercard, AMEX",
+    badge: "TC",
+    color: "#1A1A1A",
+    available: false,
+  },
+  {
+    id: "oxxo",
+    label: "OXXO",
+    sub: "Pago en efectivo en cualquier tienda",
+    badge: "OXX",
+    color: "#D8232A",
+    available: false,
+  },
+  {
+    id: "spei",
+    label: "SPEI",
+    sub: "Transferencia bancaria sin comisión",
+    badge: "SPI",
+    color: "#2E5BFF",
+    available: false,
+  },
+];
 
 export function TiendaSettings({ initial }: { initial: StoreInitial }) {
   const router = useRouter();
   const [name, setName] = useState(initial.name);
   const [description, setDescription] = useState(initial.description);
   const [isOpen, setIsOpen] = useState(initial.isOpen);
+  const [categories, setCategories] = useState<string[]>(initial.categories);
+  const [payments, setPayments] = useState<string[]>(initial.payments);
   const [savingForm, setSavingForm] = useState(false);
   const [togglingOpen, setTogglingOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -107,6 +155,71 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
     }
   }
 
+  async function persistCategories(next: string[]) {
+    const previous = categories;
+    setCategories(next); // optimistic
+    setError(null);
+    const res = await fetch("/api/stores/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categories: next }),
+    });
+    if (!res.ok) {
+      setCategories(previous); // revert
+      haptic("error");
+      setError("No pudimos guardar las categorías. Intenta de nuevo.");
+      return;
+    }
+    router.refresh();
+  }
+
+  async function handleAddCategory(raw: string) {
+    const trimmed = raw.trim();
+    if (!trimmed) return;
+    const exists = categories.some(
+      (c) => c.toLowerCase() === trimmed.toLowerCase()
+    );
+    if (exists) {
+      haptic("error");
+      return;
+    }
+    haptic("selection");
+    await persistCategories([...categories, trimmed]);
+  }
+
+  async function handleRemoveCategory(name: string) {
+    haptic("selection");
+    await persistCategories(categories.filter((c) => c !== name));
+  }
+
+  async function handleTogglePayment(id: PaymentId) {
+    const isActive = payments.includes(id);
+    // No permitir desactivar el último método activo.
+    if (isActive && payments.length <= 1) {
+      haptic("error");
+      return;
+    }
+    haptic("selection");
+    const next = isActive
+      ? payments.filter((p) => p !== id)
+      : [...payments, id];
+    const previous = payments;
+    setPayments(next);
+    setError(null);
+    const res = await fetch("/api/stores/me", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ payments: next }),
+    });
+    if (!res.ok) {
+      setPayments(previous);
+      haptic("error");
+      setError("No pudimos guardar los métodos de pago. Intenta de nuevo.");
+      return;
+    }
+    router.refresh();
+  }
+
   return (
     <div className="mx-auto w-full max-w-3xl px-5 pt-6 pb-32 md:px-8 md:pt-8 lg:px-10 lg:pt-10 lg:pb-12">
       <header className="mb-6">
@@ -165,6 +278,40 @@ export function TiendaSettings({ initial }: { initial: StoreInitial }) {
             value={`neni.mx/${initial.slug}`}
             hint="El link no se puede cambiar para no romper los enlaces que ya compartiste."
           />
+        </div>
+      </SettingsCard>
+
+      <SettingsCard
+        title="Categorías"
+        subtitle="Filtra los productos en tu tienda"
+      >
+        <CategoriesEditor
+          categories={categories}
+          onAdd={handleAddCategory}
+          onRemove={handleRemoveCategory}
+        />
+      </SettingsCard>
+
+      <SettingsCard
+        title="Métodos de pago"
+        subtitle="Activa los que quieras aceptar"
+      >
+        <div className="flex flex-col">
+          {PAYMENT_METHODS.map((method, i) => {
+            const isActive = payments.includes(method.id);
+            const isLastActive = isActive && payments.length === 1;
+            return (
+              <PaymentRow
+                key={method.id}
+                method={method}
+                active={isActive}
+                disabled={!method.available}
+                cantDeactivate={isLastActive}
+                onToggle={() => handleTogglePayment(method.id)}
+                last={i === PAYMENT_METHODS.length - 1}
+              />
+            );
+          })}
         </div>
       </SettingsCard>
 
@@ -389,5 +536,148 @@ function Toggle({
         )}
       />
     </button>
+  );
+}
+
+function CategoriesEditor({
+  categories,
+  onAdd,
+  onRemove,
+}: {
+  categories: string[];
+  onAdd: (name: string) => void;
+  onRemove: (name: string) => void;
+}) {
+  const [adding, setAdding] = useState(false);
+  const [draft, setDraft] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  function startAdding() {
+    setAdding(true);
+    setDraft("");
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  function cancelAdding() {
+    setAdding(false);
+    setDraft("");
+  }
+
+  function commit() {
+    const value = draft.trim();
+    if (!value) {
+      cancelAdding();
+      return;
+    }
+    onAdd(value);
+    setDraft("");
+    // Mantener el input abierto para agregar más rápido. Foco se mantiene.
+    requestAnimationFrame(() => inputRef.current?.focus());
+  }
+
+  return (
+    <div className="px-4 pt-3 pb-4">
+      <div className="flex flex-wrap items-center gap-2">
+        {categories.map((cat) => (
+          <span
+            key={cat}
+            className="border-td-line flex items-center gap-1.5 rounded-full border bg-white py-1 pr-1 pl-3 text-[13px] font-medium"
+          >
+            <span>{cat}</span>
+            <button
+              type="button"
+              onClick={() => onRemove(cat)}
+              aria-label={`Eliminar categoría ${cat}`}
+              className="text-td-mute hover:bg-td-line hover:text-td-ink grid h-5 w-5 place-items-center rounded-full text-xs leading-none transition-colors"
+            >
+              ×
+            </button>
+          </span>
+        ))}
+        {adding ? (
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                commit();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                cancelAdding();
+              }
+            }}
+            onBlur={commit}
+            placeholder="Nombre"
+            maxLength={40}
+            className="border-td-ink bg-td-bg w-32 rounded-full border-2 px-3 py-1 text-[13px] font-medium outline-none"
+          />
+        ) : (
+          <button
+            type="button"
+            onClick={startAdding}
+            className="border-td-line text-td-mute hover:text-td-ink hover:border-td-mute rounded-full border border-dashed px-3 py-1 text-[13px] font-medium transition-colors"
+          >
+            + agregar
+          </button>
+        )}
+      </div>
+      {categories.length === 0 && !adding && (
+        <p className="text-td-mute mt-2 text-[11px]">
+          Crea categorías para agruparlas en tu tienda. Ejemplo: "Tacos",
+          "Bebidas", "Postres".
+        </p>
+      )}
+    </div>
+  );
+}
+
+function PaymentRow({
+  method,
+  active,
+  disabled,
+  cantDeactivate,
+  onToggle,
+  last,
+}: {
+  method: (typeof PAYMENT_METHODS)[number];
+  active: boolean;
+  disabled: boolean;
+  cantDeactivate: boolean;
+  onToggle: () => void;
+  last: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-3 px-4 py-3",
+        !last && "border-b-td-line border-b",
+        disabled && "opacity-60"
+      )}
+    >
+      <div
+        className="grid h-9 w-11 shrink-0 place-items-center rounded-md font-mono text-[11px] font-bold tracking-[0.5px] text-white"
+        style={{ background: method.color }}
+      >
+        {method.badge}
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold">{method.label}</span>
+          {disabled && (
+            <span className="bg-td-bg text-td-mute rounded-full px-2 py-0.5 text-[9.5px] font-bold tracking-[0.4px] uppercase">
+              Próximamente
+            </span>
+          )}
+        </div>
+        <div className="text-td-mute mt-0.5 truncate text-xs">{method.sub}</div>
+      </div>
+      <Toggle
+        pressed={active}
+        disabled={disabled || cantDeactivate}
+        onToggle={onToggle}
+      />
+    </div>
   );
 }

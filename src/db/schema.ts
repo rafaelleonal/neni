@@ -104,7 +104,7 @@ export const stores = pgTable(
     payments: text("payments")
       .array()
       .notNull()
-      .default(sql`ARRAY['card','oxxo','spei','cash']::text[]`),
+      .default(sql`ARRAY['cash']::text[]`),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -140,6 +140,7 @@ export const orders = pgTable("orders", {
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),
   address: text("address"),
+  locationLink: text("location_link"),
   notes: text("notes"),
   state: orderStateEnum("state").notNull().default("nuevo"),
   payment: text("payment").notNull(),

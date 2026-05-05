@@ -77,6 +77,7 @@ export default async function PedidoPage({
         time: formatRelativeTime(order.createdAt),
         phone: order.customerPhone,
         address: order.address ?? undefined,
+        locationLink: order.locationLink ?? undefined,
         notes: order.notes ?? undefined,
         payment: order.payment,
         lines: items.map((it) => ({

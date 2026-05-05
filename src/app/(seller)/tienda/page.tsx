@@ -12,6 +12,8 @@ export default async function TiendaPage() {
         slug: store.slug,
         description: store.description ?? "",
         isOpen: store.isOpen,
+        categories: store.categories,
+        payments: store.payments,
       }}
     />
   );

@@ -24,6 +24,7 @@ export type OrderLineItem = {
 export type OrderDetail = Order & {
   phone: string;
   address?: string;
+  locationLink?: string;
   notes?: string;
   payment: string;
   lines: OrderLineItem[];

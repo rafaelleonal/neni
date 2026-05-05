@@ -37,7 +37,9 @@ export default async function ProductoEditorPage({
   const { store } = await getCurrentStore();
 
   if (id === "nuevo") {
-    return <ProductEditor mode="new" />;
+    return (
+      <ProductEditor mode="new" availableCategories={store.categories} />
+    );
   }
 
   const product = await db.query.products.findFirst({
@@ -48,11 +50,13 @@ export default async function ProductoEditorPage({
   return (
     <ProductEditor
       mode="edit"
+      availableCategories={store.categories}
       product={{
         id: product.id,
         name: product.name,
         price: Number(product.price),
         description: product.description ?? "",
+        category: product.category ?? "",
         stock: product.stock,
         visible: product.visible,
         tone: toneFromId(product.id),

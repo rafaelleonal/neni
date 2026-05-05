@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { haptic } from "@/lib/haptics";
 import { cn, formatPrice } from "@/lib/utils";
@@ -16,20 +17,25 @@ export type EditorProduct = {
   name: string;
   price: number;
   description: string;
+  category: string;
   stock: Stock;
   visible: boolean;
   tone: ProductTone;
 };
 
-type ProductEditorProps =
+type ProductEditorProps = (
   | { mode: "new"; product?: undefined }
-  | { mode: "edit"; product: EditorProduct };
+  | { mode: "edit"; product: EditorProduct }
+) & {
+  availableCategories: string[];
+};
 
 type Stock = "Disponible" | "Agotado";
 
 export function ProductEditor(props: ProductEditorProps) {
   const router = useRouter();
   const isEdit = props.mode === "edit";
+  const { availableCategories } = props;
 
   const [name, setName] = useState(isEdit ? props.product.name : "");
   const [priceRaw, setPriceRaw] = useState(
@@ -37,6 +43,9 @@ export function ProductEditor(props: ProductEditorProps) {
   );
   const [desc, setDesc] = useState(
     isEdit ? (props.product.description ?? "") : ""
+  );
+  const [category, setCategory] = useState(
+    isEdit ? (props.product.category ?? "") : ""
   );
   const [stock, setStock] = useState<Stock>(
     isEdit ? props.product.stock : "Disponible"
@@ -59,6 +68,7 @@ export function ProductEditor(props: ProductEditorProps) {
       name: name.trim(),
       price,
       description: desc.trim() || null,
+      category: category.trim() || null,
       stock,
       visible,
     };
@@ -222,6 +232,52 @@ export function ProductEditor(props: ProductEditorProps) {
           </label>
         </section>
 
+        {/* Categoría */}
+        {availableCategories.length > 0 ? (
+          <section className="mt-4">
+            <span className="text-td-mute mb-2 block text-xs font-semibold tracking-[0.4px] uppercase">
+              Categoría
+            </span>
+            <div className="flex flex-wrap gap-1.5">
+              <CategoryChip
+                active={category === ""}
+                onClick={() => {
+                  haptic("selection");
+                  setCategory("");
+                }}
+                label="Sin categoría"
+              />
+              {availableCategories.map((cat) => (
+                <CategoryChip
+                  key={cat}
+                  active={category === cat}
+                  onClick={() => {
+                    haptic("selection");
+                    setCategory(cat);
+                  }}
+                  label={cat}
+                />
+              ))}
+            </div>
+          </section>
+        ) : (
+          <section className="mt-4">
+            <span className="text-td-mute mb-2 block text-xs font-semibold tracking-[0.4px] uppercase">
+              Categoría
+            </span>
+            <div className="border-td-line text-td-mute rounded-2xl border border-dashed bg-white px-4 py-3 text-xs">
+              Crea categorías en{" "}
+              <Link
+                href="/tienda"
+                className="text-td-ink font-medium underline-offset-4 hover:underline"
+              >
+                Mi tienda
+              </Link>{" "}
+              para agruparlas.
+            </div>
+          </section>
+        )}
+
         {/* Stock */}
         <section className="mt-4">
           <span className="text-td-mute mb-2 block text-xs font-semibold tracking-[0.4px] uppercase">
@@ -334,5 +390,30 @@ export function ProductEditor(props: ProductEditorProps) {
         </div>
       </div>
     </div>
+  );
+}
+
+function CategoryChip({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "shrink-0 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors",
+        active
+          ? "bg-td-ink text-td-bg border-td-ink"
+          : "border-td-line text-td-ink hover:bg-td-bg bg-white"
+      )}
+    >
+      {label}
+    </button>
   );
 }

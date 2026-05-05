@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 import { z } from "zod";
 
 import { db, orders } from "@/db";
+import { notifyBuyerStateChange } from "@/lib/notifications";
 import { getCurrentStore } from "@/lib/seller";
 
 const patchBody = z.object({
@@ -31,14 +32,25 @@ export async function PATCH(
     );
   }
 
-  const result = await db
+  const [updated] = await db
     .update(orders)
     .set({ state: parsed.data.state })
     .where(and(eq(orders.id, id), eq(orders.storeId, store.id)))
     .returning();
 
-  if (result.length === 0) {
+  if (!updated) {
     return NextResponse.json({ error: "NOT_FOUND" }, { status: 404 });
   }
-  return NextResponse.json({ ok: true, order: result[0] });
+
+  // Notificar al comprador (best-effort).
+  await notifyBuyerStateChange({
+    buyerPhone: updated.customerPhone,
+    storeName: store.name,
+    storeSlug: store.slug,
+    orderId: updated.id,
+    orderNumber: updated.number,
+    state: parsed.data.state,
+  });
+
+  return NextResponse.json({ ok: true, order: updated });
 }

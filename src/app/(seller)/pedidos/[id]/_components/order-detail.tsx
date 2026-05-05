@@ -13,6 +13,7 @@ import {
 import { cn, formatPrice } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
+import { LocationMap } from "@/components/location-map";
 import { ArrowIcon, CheckIcon, WaIcon } from "@/components/neni-icons";
 
 const NEXT_LABEL: Record<OrderState, string | null> = {
@@ -151,7 +152,9 @@ export function OrderDetailPage({
               <div className="text-base font-semibold">{order.who}</div>
               <div className="text-td-mute mt-0.5 text-sm">{order.phone}</div>
               {order.address && (
-                <div className="text-td-mute mt-1 text-sm">{order.address}</div>
+                <div className="text-td-mute mt-1 text-sm">
+                  {order.address}
+                </div>
               )}
             </div>
           </div>
@@ -165,6 +168,16 @@ export function OrderDetailPage({
             Contactar por WhatsApp
           </button>
         </section>
+
+        {/* Mapa de ubicación */}
+        {order.locationLink && (
+          <section className="mt-3">
+            <div className="text-td-mute mb-2 text-xs font-semibold tracking-[0.4px] uppercase">
+              Ubicación
+            </div>
+            <LocationMap link={order.locationLink} />
+          </section>
+        )}
 
         {/* Notas */}
         {order.notes && (

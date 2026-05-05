@@ -2,7 +2,9 @@ import { NextResponse } from "next/server";
 import { and, eq, inArray } from "drizzle-orm";
 import { z } from "zod";
 
-import { db, orderItems, orders, products, stores } from "@/db";
+import { db, orderItems, orders, products, stores, user } from "@/db";
+import { expandLocationLink } from "@/lib/maps";
+import { notifySellerNewOrder } from "@/lib/notifications";
 
 const itemSchema = z.object({
   productId: z.string().min(1),
@@ -14,6 +16,7 @@ const bodySchema = z.object({
   customerName: z.string().min(1).max(80),
   customerPhone: z.string().min(1).max(40),
   address: z.string().max(160).optional().nullable(),
+  locationLink: z.string().url().max(500).optional().nullable(),
   notes: z.string().max(240).optional().nullable(),
   payment: z.enum(["card", "oxxo", "spei", "cash"]),
   items: z.array(itemSchema).min(1),
@@ -99,19 +102,30 @@ export async function POST(req: Request) {
     .reduce((sum, l) => sum + Number(l.priceSnapshot) * l.qty, 0)
     .toFixed(2);
 
-  // 4. Crear order + items.
+  // 4. Si el cliente pegó un shortlink (`maps.app.goo.gl/...`), resolverlo a
+  //    URL canónica con `lat,lng` para poder mostrar el mapa embebido.
+  const rawLocationLink = data.locationLink?.trim() || null;
+  const locationLink = rawLocationLink
+    ? await expandLocationLink(rawLocationLink)
+    : null;
+
+  // 5. Crear order + items.
   const orderId = crypto.randomUUID();
-  await db.insert(orders).values({
-    id: orderId,
-    storeId: store.id,
-    customerName: data.customerName.trim(),
-    customerPhone: data.customerPhone.trim(),
-    address: data.address?.trim() || null,
-    notes: data.notes?.trim() || null,
-    state: "nuevo",
-    payment: PAYMENT_LABELS[data.payment],
-    total,
-  });
+  const [createdOrder] = await db
+    .insert(orders)
+    .values({
+      id: orderId,
+      storeId: store.id,
+      customerName: data.customerName.trim(),
+      customerPhone: data.customerPhone.trim(),
+      address: data.address?.trim() || null,
+      locationLink,
+      notes: data.notes?.trim() || null,
+      state: "nuevo",
+      payment: PAYMENT_LABELS[data.payment],
+      total,
+    })
+    .returning({ number: orders.number });
 
   await db.insert(orderItems).values(
     lines.map((l) => ({
@@ -124,9 +138,24 @@ export async function POST(req: Request) {
     }))
   );
 
-  // 5. Devolver el id para que el cliente navegue al tracking.
-  return NextResponse.json(
-    { ok: true, orderId },
-    { status: 201 }
-  );
+  // 5. Notificar al seller por WhatsApp (best-effort, no bloquea el response).
+  if (createdOrder?.number) {
+    const owner = await db.query.user.findFirst({
+      where: eq(user.id, store.ownerUserId),
+      columns: { phoneNumber: true },
+    });
+    if (owner?.phoneNumber) {
+      await notifySellerNewOrder({
+        sellerPhone: owner.phoneNumber,
+        storeName: store.name,
+        orderNumber: createdOrder.number,
+        customerName: data.customerName.trim(),
+        total: Number(total),
+        payment: PAYMENT_LABELS[data.payment],
+      });
+    }
+  }
+
+  // 6. Devolver el id para que el cliente navegue al tracking.
+  return NextResponse.json({ ok: true, orderId }, { status: 201 });
 }
